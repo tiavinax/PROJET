@@ -1,0 +1,48 @@
+<div class="container">
+  <h2>{{ isEditing ? 'Modifier le lot' : 'Nouveau lot' }}</h2>
+
+  <p *ngIf="isLoading">Chargement...</p>
+  <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
+  <p *ngIf="succes" class="succes">{{ succes }}</p>
+
+  <div class="form-card" *ngIf="!isLoading">
+
+    <div class="form-row">
+      <label>Date d'entrée *</label>
+      <input type="date" [(ngModel)]="lot.date_entree">
+    </div>
+
+    <div class="form-row">
+      <label>Race *</label>
+      <select [(ngModel)]="lot.race_id">
+        <option [ngValue]="null">-- Choisir une race --</option>
+        <option *ngFor="let race of races" [ngValue]="race.id">
+          {{ race.nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Nombre initial *</label>
+      <input type="number" [(ngModel)]="lot.nombre_initial" min="1">
+    </div>
+
+    <div class="form-row">
+      <label>Âge entrée (semaines)</label>
+      <input type="number" [(ngModel)]="lot.age_entree_semaines" min="0">
+    </div>
+
+    <div class="form-row">
+      <label>Prix achat total (Ar) *</label>
+      <input type="number" [(ngModel)]="lot.prix_achat_total" min="0">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-annuler" (click)="annuler()">Annuler</button>
+      <button class="btn-valider" (click)="enregistrer()">
+        {{ isEditing ? 'Modifier' : 'Enregistrer' }}
+      </button>
+    </div>
+
+  </div>
+</div>

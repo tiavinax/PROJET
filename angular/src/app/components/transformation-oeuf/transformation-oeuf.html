@@ -1,0 +1,127 @@
+<div class="container">
+  <h2>Transformation œufs → Poussins</h2>
+
+  <div class="header-actions">
+    <button (click)="ouvrirAjout()">+ Nouvelle transformation</button>
+  </div>
+
+  <!-- Erreur -->
+  <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
+
+  <!-- Chargement -->
+  <p *ngIf="isLoading">Chargement...</p>
+
+  <!-- Formulaire -->
+  <div *ngIf="showForm" class="form-card">
+    <h3>Nouvelle transformation</h3>
+
+    <!-- Lot source -->
+    <div class="form-row">
+      <label>Lot source (avec atody) *</label>
+      <select [(ngModel)]="form.lot_source_id" (change)="onLotSourceChange()">
+        <option [ngValue]="null">-- Choisir un lot --</option>
+        <option *ngFor="let lot of lots" [ngValue]="lot.id">
+          Lot {{ lot.id }} — {{ lot.race_nom }}
+        </option>
+      </select>
+    </div>
+
+    <!-- Race — readonly, vient du lot source -->
+    <div class="form-row" *ngIf="raceNomSource">
+      <label>Race du nouveau lot</label>
+      <input type="text" [value]="raceNomSource" readonly class="readonly">
+      <small>Héritée du lot source</small>
+    </div>
+
+    <!-- Stock disponible — info -->
+    <div class="info-stock" *ngIf="form.lot_source_id">
+      <span>Atody disponibles : </span>
+      <strong [class.zero]="stockAtodyDisponible <= 0">
+        {{ stockAtodyDisponible }}
+      </strong>
+    </div>
+
+    <!-- Date -->
+    <div class="form-row">
+      <label>Date transformation *</label>
+      <input type="date" [(ngModel)]="form.date_transformation">
+    </div>
+
+    <!-- Nb oeufs utilisés -->
+    <div class="form-row">
+      <label>Nombre d'œufs utilisés *</label>
+      <input type="number"
+             [(ngModel)]="form.nombre_oeufs"
+             (input)="calculerPerte()"
+             min="1"
+             [max]="stockAtodyDisponible">
+    </div>
+
+    <!-- Nb poussins obtenus -->
+    <div class="form-row">
+      <label>Nombre de poussins obtenus *</label>
+      <input type="number"
+             [(ngModel)]="form.nombre_poussins_obtenus"
+             (input)="calculerPerte()"
+             min="0"
+             [max]="form.nombre_oeufs">
+    </div>
+
+    <!-- Perte calculée automatiquement -->
+    <div class="info-perte" *ngIf="form.nombre_oeufs && form.nombre_poussins_obtenus">
+      <span>Perte (lamokany) : </span>
+      <strong [class.perte]="nombrePerte > 0">{{ nombrePerte }}</strong>
+    </div>
+
+    <!-- Age entrée nouveau lot -->
+    <div class="form-row">
+      <label>Âge entrée nouveau lot (semaines)</label>
+      <input type="number" [(ngModel)]="form.age_entree_semaines" min="0">
+    </div>
+
+    <!-- Prix achat nouveau lot -->
+    <div class="form-row">
+      <label>Prix achat total nouveau lot (Ar)</label>
+      <input type="number" [(ngModel)]="form.prix_achat_total_nouveau_lot" min="0">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-annuler" (click)="annuler()">Annuler</button>
+      <button class="btn-valider" (click)="enregistrer()">Valider</button>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <table *ngIf="!isLoading && transformations.length > 0">
+    <thead>
+      <tr>
+        <th>Lot source</th>
+        <th>Race</th>
+        <th>Date</th>
+        <th>Œufs utilisés</th>
+        <th>Poussins obtenus</th>
+        <th>Perte</th>
+        <th>Nouveau lot</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let t of transformations">
+        <td>Lot {{ t.lot_source_id }}</td>
+        <td>{{ t.race_nom }}</td>
+        <td>{{ t.date_transformation | date:'dd/MM/yyyy' }}</td>
+        <td>{{ t.nombre_oeufs }}</td>
+        <td>{{ t.nombre_poussins_obtenus }}</td>
+        <td [class.perte]="t.nombre_perte > 0">{{ t.nombre_perte }}</td>
+        <td>Lot {{ t.lot_destination_id }}</td>
+        <td>
+          <button class="btn-delete" (click)="supprimer(t.id)">Annuler</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="!isLoading && transformations.length === 0">
+    Aucune transformation enregistrée
+  </p>
+</div>

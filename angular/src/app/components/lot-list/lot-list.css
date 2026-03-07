@@ -1,0 +1,65 @@
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+h2 {
+  color: #333;
+  margin-bottom: 1.5rem;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+thead {
+  background-color: #4CAF50;
+  color: white;
+}
+
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+tbody tr:hover {
+  background-color: #f5f5f5;
+}
+
+/* Statut actif/terminé */
+.actif {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+.termine {
+  background-color: #fce4ec;
+  color: #c62828;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+}
+
+p {
+  color: #666;
+  font-style: italic;
+}
+
+.btn-edit {
+  padding: 4px 10px; background: #1976D2; color: white;
+  border: none; border-radius: 4px; cursor: pointer; margin-right: 4px;
+}
+
+.btn-delete {
+  padding: 4px 10px; background: #e53935; color: white;
+  border: none; border-radius: 4px; cursor: pointer;
+}

@@ -1,0 +1,95 @@
+<div class="container">
+  <h2>Variation de poids</h2>
+
+  <!-- Filtre par lot -->
+  <div class="filtre">
+    <label>Filtrer par lot : </label>
+    <select [(ngModel)]="lotIdFiltre" (change)="filtrerParLot()">
+      <option [ngValue]="null">Tous les lots</option>
+      <option *ngFor="let lot of lots" [ngValue]="lot.id">
+        Lot {{ lot.id }} — {{ lot.race_nom }}
+      </option>
+    </select>
+    <button (click)="ouvrirAjout()">+ Ajouter</button>
+  </div>
+
+  <!-- Erreur -->
+  <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
+
+  <!-- Chargement -->
+  <p *ngIf="isLoading">Chargement...</p>
+
+  <!-- Formulaire ajout/modif -->
+  <div *ngIf="showForm" class="form-card">
+    <h3>{{ isEditing ? 'Modifier' : 'Ajouter' }} un suivi</h3>
+
+    <div class="form-row">
+      <label>Lot</label>
+      <select [(ngModel)]="suiviEnCours.lot_id" [disabled]="isEditing">
+        <option *ngFor="let lot of lots" [ngValue]="lot.id">
+          Lot {{ lot.id }} — {{ lot.race_nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Semaine</label>
+      <input type="number" [(ngModel)]="suiviEnCours.semaine" [disabled]="isEditing" min="0">
+    </div>
+
+    <div class="form-row">
+      <label>Date mesure</label>
+      <input type="date" [(ngModel)]="suiviEnCours.date_mesure">
+    </div>
+
+    <div class="form-row">
+      <label>Poids recueilli (g)</label>
+      <input type="number" [(ngModel)]="suiviEnCours.poids_recueilli_grammes" min="0">
+    </div>
+
+    <div class="form-row">
+      <label>Sakafo consommé (g)</label>
+      <input type="number" [(ngModel)]="suiviEnCours.sakafo_consomme_grammes" min="0">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-annuler" (click)="annuler()">Annuler</button>
+      <button class="btn-valider" (click)="enregistrer()">
+        {{ isEditing ? 'Modifier' : 'Valider' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <table *ngIf="!isLoading && suivis.length > 0">
+    <thead>
+      <tr>
+        <th>Lot</th>
+        <th>Race</th>
+        <th>Semaine</th>
+        <th>Date mesure</th>
+        <th>Poids (g)</th>
+        <th>Poids cumulé (g)</th>
+        <th>Sakafo (g)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let suivi of suivis; let i = index">
+        <td>{{ suivi.lot_id }}</td>
+        <td>{{ suivi.race_nom }}</td>
+        <td>S{{ suivi.semaine }}</td>
+        <td>{{ suivi.date_mesure | date:'dd/MM/yyyy' }}</td>
+        <td>{{ suivi.poids_recueilli_grammes }}</td>
+        <td><strong>{{ getPoidsTotal(i) }}</strong></td>
+        <td>{{ suivi.sakafo_consomme_grammes }}</td>
+        <td>
+          <button class="btn-edit" (click)="ouvrirModif(suivi)">Modifier</button>
+          <button class="btn-delete" (click)="supprimer(suivi.id)">Supprimer</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="!isLoading && suivis.length === 0">Aucun suivi trouvé</p>
+</div>

@@ -1,0 +1,50 @@
+<div class="container">
+  <h2>Liste des lots</h2>
+
+  <!-- Si chargement en cours -->
+  <p *ngIf="isLoading">Chargement...</p>
+
+  <!-- Si erreur -->
+  <!-- <p *ngIf="erreur" style="color:red">{{ erreur }}</p> -->
+
+  <!-- Si les données sont là -->
+  <table *ngIf="!isLoading && lots.length > 0">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Date entrée</th>
+        <th>Race</th>
+        <th>Nombre initial</th>
+        <th>Restant</th>
+        <th>Âge (semaines)</th>
+        <th>Prix achat</th>
+        <th>Statut</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- *ngFor = répéter pour chaque lot -->
+      <tr *ngFor="let lot of lots">
+        <td>{{ lot.id }}</td>
+        <td>{{ lot.date_entree | date:'dd/MM/yyyy' }}</td>
+        <td>{{ lot.race_nom }}</td>
+        <td>{{ lot.nombre_initial }}</td>
+        <td>{{ lot.nombre_restant }}</td>
+        <td>{{ lot.age_entree_semaines }}</td>
+        <td>{{ lot.prix_achat_total | number:'1.0-0' }} Ar</td>
+        <td>
+          <span [class]="lot.est_actif ? 'actif' : 'termine'">
+            {{ lot.est_actif ? 'Actif' : 'Terminé' }}
+          </span>
+        </td>
+        <td>
+          <button class="btn-edit" [routerLink]="['/lots/modifier', lot.id]">Modifier</button>
+          <button class="btn-delete" (click)="supprimerLot(lot.id)">Supprimer</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Si aucun lot -->
+  <p *ngIf="!isLoading && lots.length === 0">Aucun lot trouvé</p>
+</div>

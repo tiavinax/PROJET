@@ -1,0 +1,69 @@
+<div class="container">
+  <h2>Situation de la ferme</h2>
+
+  <!-- Filtre date -->
+  <div class="filtre">
+    <label>Date : </label>
+    <input 
+      type="date" 
+      [(ngModel)]="dateFiltre"
+      (change)="chargerSituation()">
+    <button (click)="chargerSituation()">Actualiser</button>
+  </div>
+
+  <!-- Chargement -->
+  <p *ngIf="isLoading">Chargement...</p>
+
+  <!-- Erreur -->
+  <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
+
+  <!-- Tableau -->
+  <table *ngIf="!isLoading && situationLots.length > 0">
+    <thead>
+      <tr>
+        <th>Lot</th>
+        <th>Race</th>
+        <th>Nb akoho</th>
+        <th>Achat (Ar)</th>
+        <th>Sakafo (Ar)</th>
+        <th>Morts</th>
+        <th>Poids moy (g)</th>
+        <th>Prix vente (Ar)</th>
+        <th>Nb atody</th>
+        <th>Prix atody (Ar)</th>
+        <th>Bénéfice (Ar)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let lot of situationLots">
+        <td>{{ lot.lot_id }}</td>
+        <td>{{ lot.race }}</td>
+        <td>{{ lot.nb_akoho }}</td>
+        <td>{{ lot.achat_akoho | number:'1.0-0' }}</td>
+        <td>{{ lot.sakafo_lany | number:'1.0-0' }}</td>
+        <td>{{ lot.nb_morts }}</td>
+        <td>{{ lot.poids_moyen }}</td>
+        <td>{{ lot.prix_vente | number:'1.0-0' }}</td>
+        <td>{{ lot.nb_atody }}</td>
+        <td>{{ lot.prix_atody | number:'1.0-0' }}</td>
+        <!-- Bénéfice en rouge si négatif, vert si positif -->
+        <td [class.positif]="lot.benefice > 0" [class.negatif]="lot.benefice < 0">
+          {{ lot.benefice | number:'1.0-0' }}
+        </td>
+      </tr>
+    </tbody>
+    <!-- Total en bas -->
+    <tfoot>
+      <tr>
+        <td colspan="10"><strong>TOTAL BÉNÉFICE</strong></td>
+        <td [class.positif]="totalBenefice > 0" [class.negatif]="totalBenefice < 0">
+          <strong>{{ totalBenefice | number:'1.0-0' }} Ar</strong>
+        </td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <p *ngIf="!isLoading && situationLots.length === 0">
+    Aucun lot actif à cette date
+  </p>
+</div>

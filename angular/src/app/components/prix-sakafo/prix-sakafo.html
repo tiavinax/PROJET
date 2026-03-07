@@ -1,0 +1,81 @@
+<div class="container">
+  <h2>Prix du Sakafo</h2>
+
+  <div class="header-actions">
+    <button (click)="ouvrirAjout()">+ Ajouter</button>
+  </div>
+
+  <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
+  <p *ngIf="isLoading">Chargement...</p>
+
+  <!-- Formulaire ajout nouvelle race -->
+  <div *ngIf="showForm" class="form-card">
+    <h3>Nouveau prix sakafo</h3>
+
+    <div class="form-row">
+      <label>Race *</label>
+      <select [(ngModel)]="formAjout.race_id">
+        <option [ngValue]="null">-- Choisir une race --</option>
+        <option *ngFor="let race of races" [ngValue]="race.id">
+          {{ race.nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Prix (Ar/g) *</label>
+      <input type="number" [(ngModel)]="formAjout.prix_par_gramme" min="0">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-annuler" (click)="annuler()">Annuler</button>
+      <button class="btn-valider" (click)="creer()">Valider</button>
+    </div>
+  </div>
+
+  <!-- Tableau avec modification inline -->
+  <table *ngIf="!isLoading && prixList.length > 0">
+    <thead>
+      <tr>
+        <th>Race</th>
+        <th>Prix actuel (Ar/g)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let prix of prixList">
+        <td>{{ prix.race_nom }}</td>
+
+        <!-- Mode normal -->
+        <td *ngIf="prixEnCoursId !== prix.id">
+          <strong>{{ prix.prix_par_gramme }}</strong>
+        </td>
+
+        <!-- Mode édition inline -->
+        <td *ngIf="prixEnCoursId === prix.id">
+          <input type="number"
+                 [(ngModel)]="prixEnCourValeur"
+                 min="0"
+                 class="input-inline">
+        </td>
+
+        <td>
+          <!-- Boutons mode normal -->
+          <button *ngIf="prixEnCoursId !== prix.id"
+                  class="btn-edit"
+                  (click)="ouvrirModif(prix)">
+            Modifier
+          </button>
+
+          <!-- Boutons mode édition -->
+          <ng-container *ngIf="prixEnCoursId === prix.id">
+            <button class="btn-valider-sm" (click)="sauvegarderModif(prix.id)">✓</button>
+            <button class="btn-annuler-sm" (click)="annulerModif()">✗</button>
+          </ng-container>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="!isLoading && prixList.length === 0">Aucun prix enregistré</p>
+</div>
