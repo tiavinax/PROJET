@@ -85,7 +85,7 @@ class Lot {
         await connection.beginTransaction();
 
         try {
-            await connection.query('DELETE FROM SUIVI_POIDS WHERE lot_id = ?', [id]);
+            // await connection.query('DELETE FROM SUIVI_POIDS WHERE lot_id = ?', [id]);
             await connection.query('DELETE FROM RECENSEMENT_OEUF WHERE lot_id = ?', [id]);
             await connection.query('DELETE FROM MORTALITE WHERE lot_id = ?', [id]);
             await connection.query('DELETE FROM TRANSFORMATION_OEUF WHERE lot_source_id = ? OR lot_destination_id = ?', [id, id]);

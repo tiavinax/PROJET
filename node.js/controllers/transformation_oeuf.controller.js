@@ -55,8 +55,7 @@ exports.create = async (req, res) => {
         }
 
         // Vérifier stock atody disponible
-        const today = new Date().toISOString().split('T')[0];
-        const totalAtody = await RecensementOeuf.getTotalOeufs(lot_source_id, today);
+        const totalAtody = await RecensementOeuf.getTotalOeufs(lot_source_id, date_transformation);
 
         if (nombre_oeufs > totalAtody) {
             return res.status(400).json({

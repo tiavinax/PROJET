@@ -8,6 +8,7 @@ const transformationOeufController = require('../controllers/transformation_oeuf
 const mortaliteController    = require('../controllers/mortalite.controller');
 const prixSakafoController   = require('../controllers/prix_sakafo.controller');
 const raceController = require('../controllers/race.controller');
+const prixAtodyController = require('../controllers/prix_atody.controller');
 
 // ========== LOTS ==========
 router.get('/lots', lotController.getAllLots);
@@ -62,6 +63,13 @@ router.get('/races/:id',    raceController.getById);
 router.post('/races',       raceController.create);
 router.put('/races/:id',    raceController.update);
 router.delete('/races/:id', raceController.delete);
+
+// ========== PRIX ATODY ==========
+router.get('/prix-atody',        prixAtodyController.getAll);
+router.get('/prix-atody/:id',    prixAtodyController.getById);
+router.post('/prix-atody',       prixAtodyController.create);
+router.put('/prix-atody/:id',    prixAtodyController.update);
+router.delete('/prix-atody/:id', prixAtodyController.delete);
 
 
 module.exports = router;

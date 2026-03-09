@@ -4,8 +4,10 @@
   <!-- Si chargement en cours -->
   <p *ngIf="isLoading">Chargement...</p>
 
-  <!-- Si erreur -->
-  <!-- <p *ngIf="erreur" style="color:red">{{ erreur }}</p> -->
+  <div class="header-actions">
+    <a routerLink="/lots/nouveau">+ Ajouter</a>
+  </div>
+
 
   <!-- Si les données sont là -->
   <table *ngIf="!isLoading && lots.length > 0">

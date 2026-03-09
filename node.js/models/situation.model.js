@@ -13,6 +13,7 @@ class Situation {
                 l.race_id,
                 r.nom           AS race_nom,
                 r.prix_vente_gramme,
+                r.prix_vente_kg,
                 ps.prix_par_gramme AS sakafo_prix
             FROM LOT l
             LEFT JOIN RACE r ON l.race_id = r.id
@@ -72,7 +73,7 @@ class Situation {
             SELECT prix_unitaire
             FROM PRIX_ATODY
             WHERE race_id = ?
-            ORDER BY date_debut DESC
+            ORDER BY date DESC
             LIMIT 1
         `, [raceId]);
 

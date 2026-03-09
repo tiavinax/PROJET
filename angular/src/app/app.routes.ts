@@ -9,6 +9,7 @@ import { TransformationOeufComponent } from './components/transformation-oeuf/tr
 import { MortaliteComponent } from './components/mortalite/mortalite';
 import { PrixSakafoComponent } from './components/prix-sakafo/prix-sakafo';
 import { RaceComponent } from './components/race/race';
+import { PrixAtodyComponent } from './components/prix-atody/prix-atody';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/lots', pathMatch: 'full' },
@@ -22,5 +23,6 @@ export const routes: Routes = [
     { path: 'mortalite', component: MortaliteComponent },
     { path: 'prix-sakafo', component: PrixSakafoComponent },
     { path: 'races', component: RaceComponent },
+    { path: 'prix-atody', component: PrixAtodyComponent },
 ];
 

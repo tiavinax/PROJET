@@ -1,0 +1,86 @@
+<div class="container">
+  <h2>Prix des œufs (Atody)</h2>
+
+  <div class="header-actions">
+    <button (click)="ouvrirAjout()">+ Ajouter</button>
+  </div>
+
+  <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
+  <p *ngIf="isLoading">Chargement...</p>
+
+  <!-- Formulaire ajout -->
+  <div *ngIf="showForm" class="form-card">
+    <h3>Nouveau prix atody</h3>
+
+    <div class="form-row">
+      <label>Race *</label>
+      <select [(ngModel)]="formAjout.race_id">
+        <option [ngValue]="null">-- Choisir une race --</option>
+        <option *ngFor="let race of races" [ngValue]="race.id">
+          {{ race.nom }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <label>Prix unitaire (Ar/oeuf) *</label>
+      <input type="number" [(ngModel)]="formAjout.prix_unitaire" min="0">
+    </div>
+
+    <div class="form-row">
+      <label>Date</label>
+      <input type="date" [(ngModel)]="formAjout.date">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-annuler" (click)="annuler()">Annuler</button>
+      <button class="btn-valider" (click)="creer()">Valider</button>
+    </div>
+  </div>
+
+  <!-- Tableau avec modification inline -->
+  <table *ngIf="!isLoading && prixList.length > 0">
+    <thead>
+      <tr>
+        <th>Race</th>
+        <th>Prix (Ar/oeuf)</th>
+        <th>Date</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let prix of prixList">
+        <td>{{ prix.race_nom }}</td>
+
+        <!-- Mode normal -->
+        <ng-container *ngIf="prixEnCoursId !== prix.id">
+          <td><strong>{{ prix.prix_unitaire }}</strong></td>
+          <td>{{ prix.date | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <button class="btn-edit" (click)="ouvrirModif(prix)">Modifier</button>
+            <button class="btn-delete" (click)="supprimer(prix.id)">Supprimer</button>
+          </td>
+        </ng-container>
+
+        <!-- Mode édition inline -->
+        <ng-container *ngIf="prixEnCoursId === prix.id">
+          <td>
+            <input type="number" [(ngModel)]="prixEnCoursValeur"
+                   min="0" class="input-inline">
+          </td>
+          <td>
+            <input type="date" [(ngModel)]="dateEnCoursValeur"
+                   class="input-inline-date">
+          </td>
+          <td>
+            <button class="btn-valider-sm" (click)="sauvegarderModif(prix.id)">✓</button>
+            <button class="btn-annuler-sm" (click)="annulerModif()">✗</button>
+          </td>
+        </ng-container>
+
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="!isLoading && prixList.length === 0">Aucun prix atody enregistré</p>
+</div>

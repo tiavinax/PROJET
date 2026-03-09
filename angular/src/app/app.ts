@@ -11,14 +11,14 @@ import { HttpClientModule } from '@angular/common/http';
       <header>
         <h1>Gestion Ferme Avicole</h1>
         <nav>
-          <a routerLink="/lots">Liste des lots</a>
-          <a routerLink="/suivi-poids">Suivi poids</a>
-          <a routerLink="/lots/nouveau">Nouveau lot</a>
-          <a routerLink="/races">Races</a>
-          <a routerLink="/mortalite">Mortalité</a>
-          <a routerLink="/prix-sakafo">Prix Sakafo</a>
-          <a routerLink="/recensement-oeuf">Recensement Atody</a>
-          <a routerLink="/transformation-oeuf">Transformation Atody</a>
+          <a routerLink="/lots">LOTS</a>
+          <a routerLink="/races">RACES</a>
+          <a routerLink="/suivi-poids">SUIVI POIDS</a>
+          <a routerLink="/mortalite">MORTALITE</a>
+          <a routerLink="/prix-sakafo">PRIX SAKAFO</a>
+          <a routerLink="/prix-atody">PRIX ATODY</a>
+          <a routerLink="/recensement-oeuf">RECENSEMENT</a>
+          <a routerLink="/transformation-oeuf">INCUBATION</a>
           <a routerLink="/situation">SITUATION GLOBALE</a>
         </nav>
       </header>

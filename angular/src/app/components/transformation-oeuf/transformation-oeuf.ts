@@ -102,6 +102,7 @@ export class TransformationOeufComponent implements OnInit {
             (sum: number, r: any) => sum + r.nombre_oeufs, 0
           );
         }
+        console.debug(this.stockAtodyDisponible);
         this.cdr.detectChanges();
       },
       error: () => {}
