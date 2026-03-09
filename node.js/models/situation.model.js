@@ -21,7 +21,7 @@ class Situation {
             WHERE l.est_actif = 1
             AND l.date_entree <= ?
             ORDER BY l.date_entree DESC
-        `, [dateFiltre, dateFiltre]);
+        `, [dateFiltre]);
 
         return rows;
     }
@@ -39,18 +39,17 @@ class Situation {
     }
 
     // Suivi poids d'un lot jusqu'à la date filtre
-    static async getSuiviPoids(lotId, dateFiltre) {
+    // Remplacer getSuiviPoids — maintenant par race
+    static async getSuiviPoids(raceId) {
         const [rows] = await db.query(`
-            SELECT 
-                semaine,
-                date_mesure,
-                poids_recueilli_grammes,
-                sakafo_consomme_grammes
-            FROM SUIVI_POIDS
-            WHERE lot_id = ?
-            AND date_mesure <= ?
-            ORDER BY semaine ASC
-        `, [lotId, dateFiltre]);
+        SELECT 
+            semaine,
+            poids_recueilli_grammes,
+            sakafo_consomme_grammes
+        FROM SUIVI_POIDS
+        WHERE race_id = ?
+        ORDER BY semaine ASC
+    `, [raceId]);
 
         return rows;
     }

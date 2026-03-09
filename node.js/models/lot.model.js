@@ -119,16 +119,16 @@ class Lot {
 
     // Ajouter un suivi poids
     static async addSuiviPoids(data) {
-        const { lot_id, semaine, date_mesure, poids_moyen_grammes, sakafo_consomme_grammes } = data;
+        const { lot_id, semaine, date_mesure, poids_recueilli_grammes, sakafo_consomme_grammes } = data;
 
         const [result] = await db.query(
-            `INSERT INTO SUIVI_POIDS (lot_id, semaine, date_mesure, poids_moyen_grammes, sakafo_consomme_grammes)
+            `INSERT INTO SUIVI_POIDS (lot_id, semaine, date_mesure, poids_recueilli_grammes, sakafo_consomme_grammes)
              VALUES (?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
              date_mesure = VALUES(date_mesure),
-             poids_moyen_grammes = VALUES(poids_moyen_grammes),
+             poids_recueilli_grammes = VALUES(poids_recueilli_grammes),
              sakafo_consomme_grammes = VALUES(sakafo_consomme_grammes)`,
-            [lot_id, semaine, date_mesure, poids_moyen_grammes, sakafo_consomme_grammes]
+            [lot_id, semaine, date_mesure, poids_recueilli_grammes, sakafo_consomme_grammes]
         );
 
         return result.insertId;

@@ -1,0 +1,75 @@
+.container { max-width: 900px; margin: 0 auto; }
+
+.header-actions { margin-bottom: 1.5rem; }
+
+.header-actions button {
+  padding: 8px 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.form-card {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  max-width: 450px;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem;
+}
+
+.form-row label { font-weight: bold; margin-bottom: 4px; color: #555; }
+
+.form-row input {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.form-actions { display: flex; gap: 1rem; margin-top: 1rem; }
+
+.btn-annuler {
+  flex: 1; padding: 8px;
+  background: #e0e0e0;
+  border: none; border-radius: 4px; cursor: pointer;
+}
+
+.btn-valider {
+  flex: 1; padding: 8px;
+  background: #4CAF50; color: white;
+  border: none; border-radius: 4px; cursor: pointer;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+}
+
+thead { background: #4CAF50; color: white; }
+
+th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #eee; }
+
+tbody tr:hover { background: #f5f5f5; }
+
+.btn-edit {
+  padding: 4px 10px; background: #1976D2; color: white;
+  border: none; border-radius: 4px; cursor: pointer; margin-right: 4px;
+}
+
+.btn-delete {
+  padding: 4px 10px; background: #e53935; color: white;
+  border: none; border-radius: 4px; cursor: pointer;
+}
+
+.erreur { color: red; }

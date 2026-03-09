@@ -1,31 +1,113 @@
 const Situation = require('../models/situation.model');
 
-// Calculer sakafo d'UNE semaine
-function calculerSakafoSemaine(semaine, dateFiltre) {
-    const dateMesure = semaine.date_mesure.toISOString().split('T')[0];
-
-    // Semaine future → 0
-    if (dateMesure > dateFiltre) return 0;
-
-    // Semaine passée ou égale → 100%
-    return semaine.sakafo_consomme_grammes;
+// Convertir n'importe quelle date en "YYYY-MM-DD"
+function toDateStr(date) {
+    const d = new Date(date);
+    const year  = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day   = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
 }
 
-// Calculer sakafo total en Ariary
-function calculerSakafoLany(suiviPoids, dateFiltre, prixParGramme) {
-    let totalGrammes = 0;
+// Calculer le nombre de jours entre deux dates "YYYY-MM-DD"
+function diffJours(dateDebut, dateFin) {
+    const d1 = new Date(dateDebut + 'T00:00:00');
+    const d2 = new Date(dateFin   + 'T00:00:00');
+    return Math.floor((d2 - d1) / (1000 * 60 * 60 * 24));
+}
 
-    for (const semaine of suiviPoids) {
-        totalGrammes += calculerSakafoSemaine(semaine, dateFiltre);
+// Calculer sakafo_lany en grammes pour un lot
+function calculerSakafoLanyGrammes(suiviPoids, dateEntreeLot, dateFiltre) {
+    const dateEntree = toDateStr(dateEntreeLot);
+    let total = 0;
+
+    for (const s of suiviPoids) {
+
+        // S0 — pas de sakafo
+        if (s.semaine === 0) continue;
+
+        // Bornes de la période
+        // debut = dateEntree + (N-1)*7
+        // fin   = dateEntree + N*7 - 1
+        const debutJour = (s.semaine - 1) * 7;
+        const finJour   = (s.semaine * 7) - 1;
+
+        const debut = new Date(dateEntree + 'T00:00:00');
+        debut.setDate(debut.getDate() + debutJour);
+        const debutStr = toDateStr(debut);
+
+        const fin = new Date(dateEntree + 'T00:00:00');
+        fin.setDate(fin.getDate() + finJour);
+        const finStr = toDateStr(fin);
+
+        // Cas 1 — période future
+        if (debutStr > dateFiltre) continue;
+
+        // Cas 2 — période complète passée
+        if (finStr < dateFiltre) {
+            total += s.sakafo_consomme_grammes;
+            continue;
+        }
+
+        // Cas 3 — période en cours
+        const jours = diffJours(debutStr, dateFiltre) + 1;
+        total += (s.sakafo_consomme_grammes / 7) * jours;
     }
 
-    return Math.round(totalGrammes * prixParGramme);
+    return total;
 }
 
-// Controller principal
+// Calculer poids moyen pour un lot
+function calculerPoidsMoyen(suiviPoids, dateEntreeLot, dateFiltre) {
+    const dateEntree = toDateStr(dateEntreeLot);
+    let total = 0;
+
+    for (const s of suiviPoids) {
+
+        // Date de cette semaine = dateEntree + semaine*7
+        const dateSemaine = new Date(dateEntree + 'T00:00:00');
+        dateSemaine.setDate(dateSemaine.getDate() + s.semaine * 7);
+        const dateSemaineStr = toDateStr(dateSemaine);
+
+        // S0 — poids initial complet si date_entree <= dateFiltre
+        if (s.semaine === 0) {
+            if (dateSemaineStr <= dateFiltre) {
+                total += s.poids_recueilli_grammes;
+            }
+            continue;
+        }
+
+        // Bornes de la période
+        const debutJour = (s.semaine - 1) * 7;
+        const debut = new Date(dateEntree + 'T00:00:00');
+        debut.setDate(debut.getDate() + debutJour);
+        const debutStr = toDateStr(debut);
+
+        const finJour = (s.semaine * 7) - 1;
+        const fin = new Date(dateEntree + 'T00:00:00');
+        fin.setDate(fin.getDate() + finJour);
+        const finStr = toDateStr(fin);
+
+        // Période future → 0
+        if (debutStr > dateFiltre) continue;
+
+        // Période complète
+        if (finStr < dateFiltre) {
+            total += s.poids_recueilli_grammes;
+            continue;
+        }
+
+        // Période en cours — proportionnel
+        const jours = diffJours(debutStr, dateFiltre) + 1;
+        total += (s.poids_recueilli_grammes / 7) * jours;
+    }
+
+    return total;
+}
+
 exports.getSituation = async (req, res) => {
     try {
-        const dateFiltre = req.query.date || new Date().toISOString().split('T')[0];
+        const dateFiltre = req.query.date || toDateStr(new Date());
 
         const lots = await Situation.getLotsFiltres(dateFiltre);
         const situationLots = [];
@@ -34,51 +116,49 @@ exports.getSituation = async (req, res) => {
 
             // 1. nb_akoho
             const totalMorts = await Situation.getMorts(lot.id, dateFiltre);
-            const nb_akoho = lot.nombre_initial - Number(totalMorts);
+            const nb_akoho   = lot.nombre_initial - Number(totalMorts);
 
-            // 2. Suivi poids
-            const suiviPoids = await Situation.getSuiviPoids(lot.id, dateFiltre);
+            // 2. Suivi poids par race
+            const suiviPoids = await Situation.getSuiviPoids(lot.race_id);
 
             // 3. Sakafo
-            const sakafo_lany = calculerSakafoLany(
+            const sakafoGrammes = calculerSakafoLanyGrammes(
                 suiviPoids,
-                dateFiltre,
-                lot.sakafo_prix || 0
+                lot.date_entree,
+                dateFiltre
             );
+            const sakafo_lany = sakafoGrammes * Number(lot.sakafo_prix || 0);
 
-            // 4. Poids moyen — sommer tous les poids_recueilli
-            const poids_moyen = suiviPoids.reduce(
-                (sum, semaine) => sum + semaine.poids_recueilli_grammes,
-                0
+            // 4. Poids moyen
+            const poids_moyen = calculerPoidsMoyen(
+                suiviPoids,
+                lot.date_entree,
+                dateFiltre
             );
 
             // 5. Prix vente
-            const prix_vente = Math.round(
-                poids_moyen * (lot.prix_vente_gramme || 0) * nb_akoho
-            );
+            const prix_vente = poids_moyen * Number(lot.prix_vente_gramme || 0) * nb_akoho;
 
             // 6. Atody
-            const nb_atody = await Situation.getAtody(lot.id, dateFiltre);
+            const nb_atody          = await Situation.getAtody(lot.id, dateFiltre);
             const prixUnitaireAtody = await Situation.getPrixAtody(lot.race_id);
-            const prix_atody = Number(nb_atody) * prixUnitaireAtody;
+            const prix_atody        = Number(nb_atody) * Number(prixUnitaireAtody);
 
             // 7. Bénéfice
-            const benefice = Math.round(
-                (prix_vente + prix_atody) - (Number(lot.prix_achat_total) + sakafo_lany)
-            );
+            const benefice = (prix_vente + prix_atody) - (Number(lot.prix_achat_total) + sakafo_lany);
 
             situationLots.push({
                 lot_id:      lot.id,
                 race:        lot.race_nom,
                 nb_akoho,
                 achat_akoho: Number(lot.prix_achat_total),
-                sakafo_lany,
+                sakafo_lany: Math.round(sakafo_lany * 100) / 100,
                 nb_morts:    Number(totalMorts),
-                poids_moyen,
-                prix_vente,
+                poids_moyen: Math.round(poids_moyen * 1000) / 1000,
+                prix_vente:  Math.round(prix_vente * 100) / 100,
                 nb_atody:    Number(nb_atody),
-                prix_atody,
-                benefice
+                prix_atody:  Math.round(prix_atody * 100) / 100,
+                benefice:    Math.round(benefice * 100) / 100
             });
         }
 

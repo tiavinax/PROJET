@@ -14,6 +14,7 @@ import { HttpClientModule } from '@angular/common/http';
           <a routerLink="/lots">Liste des lots</a>
           <a routerLink="/suivi-poids">Suivi poids</a>
           <a routerLink="/lots/nouveau">Nouveau lot</a>
+          <a routerLink="/races">Races</a>
           <a routerLink="/mortalite">Mortalité</a>
           <a routerLink="/prix-sakafo">Prix Sakafo</a>
           <a routerLink="/recensement-oeuf">Recensement Atody</a>

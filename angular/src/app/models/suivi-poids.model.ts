@@ -1,9 +1,9 @@
 export interface SuiviPoids {
     id: number;
-    lot_id: number;
+    race_id: number;       // ← race_id au lieu de lot_id
     semaine: number;
-    date_mesure: string;
     poids_recueilli_grammes: number;
     sakafo_consomme_grammes: number;
     race_nom: string;
+
 }

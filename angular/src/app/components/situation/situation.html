@@ -4,10 +4,7 @@
   <!-- Filtre date -->
   <div class="filtre">
     <label>Date : </label>
-    <input 
-      type="date" 
-      [(ngModel)]="dateFiltre"
-      (change)="chargerSituation()">
+    <input type="date" [(ngModel)]="dateFiltre" (change)="chargerSituation()">
     <button (click)="chargerSituation()">Actualiser</button>
   </div>
 
@@ -39,16 +36,16 @@
         <td>{{ lot.lot_id }}</td>
         <td>{{ lot.race }}</td>
         <td>{{ lot.nb_akoho }}</td>
-        <td>{{ lot.achat_akoho | number:'1.0-0' }}</td>
-        <td>{{ lot.sakafo_lany | number:'1.0-0' }}</td>
+        <td>{{ lot.achat_akoho | number:'1.2-2' }}</td>
+        <td>{{ lot.sakafo_lany | number:'1.2-2' }}</td>
         <td>{{ lot.nb_morts }}</td>
-        <td>{{ lot.poids_moyen }}</td>
-        <td>{{ lot.prix_vente | number:'1.0-0' }}</td>
+        <td>{{ lot.poids_moyen | number:'1.3-3' }}</td>
+        <td>{{ lot.prix_vente | number:'1.2-2' }}</td>
         <td>{{ lot.nb_atody }}</td>
-        <td>{{ lot.prix_atody | number:'1.0-0' }}</td>
+        <td>{{ lot.prix_atody | number:'1.2-2' }}</td>
         <!-- Bénéfice en rouge si négatif, vert si positif -->
         <td [class.positif]="lot.benefice > 0" [class.negatif]="lot.benefice < 0">
-          {{ lot.benefice | number:'1.0-0' }}
+          {{ lot.benefice | number:'1.2-2' }}
         </td>
       </tr>
     </tbody>
@@ -57,7 +54,7 @@
       <tr>
         <td colspan="10"><strong>TOTAL BÉNÉFICE</strong></td>
         <td [class.positif]="totalBenefice > 0" [class.negatif]="totalBenefice < 0">
-          <strong>{{ totalBenefice | number:'1.0-0' }} Ar</strong>
+          <strong>{{ totalBenefice | number:'1.2-2' }} Ar</strong>
         </td>
       </tr>
     </tfoot>

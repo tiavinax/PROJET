@@ -19,12 +19,11 @@ registerLocaleData(localeFr);
 export class SuiviPoidsComponent implements OnInit {
 
   suivis: SuiviPoids[] = [];
-  lots: any[] = [];
+  races: any[] = [];           // ← races au lieu de lots
   isLoading = false;
   erreur = '';
-  lotIdFiltre: number | null = null;
+  raceIdFiltre: number | null = null;  // ← filtre par race
 
-  // Formulaire ajout/modif
   showForm = false;
   isEditing = false;
   suiviEnCours: any = this.formVide();
@@ -36,26 +35,25 @@ export class SuiviPoidsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.chargerLots();
+    this.chargerRaces();
     this.chargerSuivis();
   }
 
-  // Formulaire vide par défaut
   formVide() {
     return {
       id: null,
-      lot_id: null,
-      semaine: null,
-      date_mesure: '',
+      race_id: null,                   // ← race_id
+      semaine: null,                   // ← accepte 0 (date entrée poussin)
       poids_recueilli_grammes: null,
       sakafo_consomme_grammes: null
+      // date_mesure supprimé !
     };
   }
 
-  chargerLots(): void {
-    this.lotService.getLots().subscribe({
+  chargerRaces(): void {
+    this.lotService.getRaces().subscribe({
       next: (response) => {
-        if (response.success) this.lots = response.data;
+        if (response.success) this.races = response.data;
         this.cdr.detectChanges();
       },
       error: () => {}
@@ -64,13 +62,13 @@ export class SuiviPoidsComponent implements OnInit {
 
   chargerSuivis(): void {
     this.isLoading = true;
-    this.suiviService.getAll(this.lotIdFiltre ?? undefined).subscribe({
+    this.suiviService.getAll(this.raceIdFiltre ?? undefined).subscribe({
       next: (response) => {
         if (response.success) this.suivis = response.data;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
-      error: (err) => {
+      error: () => {
         this.erreur = 'Erreur lors du chargement';
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -78,27 +76,55 @@ export class SuiviPoidsComponent implements OnInit {
     });
   }
 
-  // Filtrer par lot
-  filtrerParLot(): void {
+  filtrerParRace(): void {
     this.chargerSuivis();
   }
 
-  // Ouvrir formulaire ajout
   ouvrirAjout(): void {
     this.isEditing = false;
     this.suiviEnCours = this.formVide();
+    this.erreur = '';
     this.showForm = true;
   }
 
-  // Ouvrir formulaire modification
   ouvrirModif(suivi: SuiviPoids): void {
     this.isEditing = true;
-    this.suiviEnCours = { ...suivi };   // copie pour ne pas modifier la liste
+    this.suiviEnCours = { ...suivi };
+    this.erreur = '';
     this.showForm = true;
   }
 
-  // Enregistrer (ajout ou modif)
   enregistrer(): void {
+    // Validation — semaine 0 est valide !
+    if (!this.suiviEnCours.race_id) {
+      this.erreur = 'Race obligatoire';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.suiviEnCours.semaine === null || 
+        this.suiviEnCours.semaine === undefined ||
+        this.suiviEnCours.semaine === '') {
+      this.erreur = 'Semaine obligatoire (0 = date entrée poussin)';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (!this.suiviEnCours.poids_recueilli_grammes) {
+      this.erreur = 'Poids obligatoire';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.suiviEnCours.sakafo_consomme_grammes === null ||
+        this.suiviEnCours.sakafo_consomme_grammes === undefined) {
+      this.erreur = 'Sakafo obligatoire (0 si semaine 0)';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    this.erreur = '';
+
     if (this.isEditing) {
       this.suiviService.update(this.suiviEnCours.id, this.suiviEnCours).subscribe({
         next: (response) => {
@@ -150,10 +176,12 @@ export class SuiviPoidsComponent implements OnInit {
     this.erreur = '';
   }
 
-  // Calculer poids cumulé jusqu'à une ligne
+  // Poids cumulé — seulement pour la même race
   getPoidsTotal(index: number): number {
+    const raceId = this.suivis[index].race_id;
     return this.suivis
       .slice(0, index + 1)
+      .filter(s => s.race_id === raceId)
       .reduce((sum, s) => sum + s.poids_recueilli_grammes, 0);
   }
 }

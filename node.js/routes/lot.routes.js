@@ -7,6 +7,7 @@ const recensementOeufController = require('../controllers/recensement_oeuf.contr
 const transformationOeufController = require('../controllers/transformation_oeuf.controller');
 const mortaliteController    = require('../controllers/mortalite.controller');
 const prixSakafoController   = require('../controllers/prix_sakafo.controller');
+const raceController = require('../controllers/race.controller');
 
 // ========== LOTS ==========
 router.get('/lots', lotController.getAllLots);
@@ -22,13 +23,11 @@ router.get('/races', lotController.getAllRaces);
 router.get('/situation', situationController.getSituation);
 
 // ========== SUIVI POIDS ==========
-// IMPORTANT : toutes les routes commencent par /suivi-poids
-router.get('/suivi-poids',                      suiviPoidsController.getAll);
-router.get('/suivi-poids/lot/:lotId/date',      suiviPoidsController.getByLotAndDate);
-router.get('/suivi-poids/:id',                  suiviPoidsController.getById);
-router.post('/suivi-poids',                     suiviPoidsController.create);
-router.put('/suivi-poids/:id',                  suiviPoidsController.update);
-router.delete('/suivi-poids/:id',               suiviPoidsController.delete);
+router.get('/suivi-poids',          suiviPoidsController.getAll);
+router.get('/suivi-poids/:id',      suiviPoidsController.getById);
+router.post('/suivi-poids',         suiviPoidsController.create);
+router.put('/suivi-poids/:id',      suiviPoidsController.update);
+router.delete('/suivi-poids/:id',   suiviPoidsController.delete);
 
 // ========== RECENSEMENT OEUF ==========
 router.get('/recensement-oeuf',                   recensementOeufController.getAll);
@@ -56,6 +55,13 @@ router.get('/prix-sakafo',      prixSakafoController.getAll);
 router.get('/prix-sakafo/:id',  prixSakafoController.getById);
 router.put('/prix-sakafo/:id',  prixSakafoController.update);  
 router.post('/prix-sakafo', prixSakafoController.create);  // ← ajouter une route POST pour créer un nouveau prix sakafo
+
+// ========== RACES CRUD ==========
+router.get('/races',        raceController.getAll);
+router.get('/races/:id',    raceController.getById);
+router.post('/races',       raceController.create);
+router.put('/races/:id',    raceController.update);
+router.delete('/races/:id', raceController.delete);
 
 
 module.exports = router;

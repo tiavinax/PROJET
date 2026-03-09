@@ -8,6 +8,7 @@ import { RecensementOeufComponent } from './components/recensement-oeuf/recensem
 import { TransformationOeufComponent } from './components/transformation-oeuf/transformation-oeuf';
 import { MortaliteComponent } from './components/mortalite/mortalite';
 import { PrixSakafoComponent } from './components/prix-sakafo/prix-sakafo';
+import { RaceComponent } from './components/race/race';
 
 export const routes: Routes = [
     { path: '', redirectTo: '/lots', pathMatch: 'full' },
@@ -20,5 +21,6 @@ export const routes: Routes = [
     { path: 'transformation-oeuf', component: TransformationOeufComponent },
     { path: 'mortalite', component: MortaliteComponent },
     { path: 'prix-sakafo', component: PrixSakafoComponent },
+    { path: 'races', component: RaceComponent },
 ];
 

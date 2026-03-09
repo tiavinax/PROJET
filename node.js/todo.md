@@ -203,3 +203,37 @@ sakafo_lany = total_grammes × prix_unique
 5. Tester avec le navigateur
 6. Angular ensuite
 
+
+
+
+
+
+
+Sakafo_lany = SakafoLanySemaine(semaine, dateEntreeLot, dateFiltre) * prix_sakafo;
+
+SakafoLanySemaine :
+
+par example : date entrer du race_id = 1 (2026-03-07)
+
++----+---------+---------+-------------------------+-------------------------+
+| id | race_id | semaine | poids_recueilli_grammes | sakafo_consomme_grammes |
++----+---------+---------+-------------------------+-------------------------+
+|  1 |       1 |       0 |                     150 |                       0 |
+|  2 |       1 |       1 |                     100 |                     150 |
+|  3 |       1 |       2 |                     150 |                     200 |
+|  4 |       1 |       3 |                     300 |                     500 |
+|  5 |       1 |       4 |                     350 |                     500 |
+
+date filtre : 2026-03-09
+
+le calcul devrait etre commme suivant : puisque 9 est dans le semain 1
+
+sakafo_semaine = 150(sakafo_consomme_grammes) / 7 * 3(car 07->09) = 64.2857 g
+Sakafo_lany = sakafo_semaine * prix_sakafo = 64.2857g * 120Ar/g = 7714.285714Ar
+et le calcul du poids moyen et le meme :
+
+Poids_moyen = 150g(poids initial au semaine 0) + 100(poids_recueilli_grammes du semaine 1) / 7 * 3 = 192.857g
+
+
+
+

@@ -1,0 +1,69 @@
+<div class="container">
+  <h2>Gestion des races</h2>
+
+  <div class="header-actions">
+    <button (click)="ouvrirAjout()">+ Ajouter une race</button>
+  </div>
+
+  <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
+  <p *ngIf="isLoading">Chargement...</p>
+
+  <!-- Formulaire -->
+  <div *ngIf="showForm" class="form-card">
+    <h3>{{ isEditing ? 'Modifier' : 'Nouvelle' }} race</h3>
+
+    <div class="form-row">
+      <label>Nom *</label>
+      <input type="text" [(ngModel)]="raceEnCours.nom" placeholder="ex: Gasy, Vazaha...">
+    </div>
+
+    <div class="form-row">
+      <label>Prix vente (Ar/g) *</label>
+      <input type="number" [(ngModel)]="raceEnCours.prix_vente_gramme" min="0">
+    </div>
+
+    <div class="form-row">
+      <label>Prix vente (Ar/kg)</label>
+      <input type="number" [(ngModel)]="raceEnCours.prix_vente_kg" min="0">
+    </div>
+
+    <div class="form-row">
+      <label>Prix achat unitaire (Ar)</label>
+      <input type="number" [(ngModel)]="raceEnCours.prix_achat_unitaire" min="0">
+    </div>
+
+    <div class="form-actions">
+      <button class="btn-annuler" (click)="annuler()">Annuler</button>
+      <button class="btn-valider" (click)="enregistrer()">
+        {{ isEditing ? 'Modifier' : 'Valider' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Tableau -->
+  <table *ngIf="!isLoading && races.length > 0">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Prix vente (Ar/g)</th>
+        <th>Prix vente (Ar/kg)</th>
+        <th>Prix achat unitaire (Ar)</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let race of races">
+        <td><strong>{{ race.nom }}</strong></td>
+        <td>{{ race.prix_vente_gramme }}</td>
+        <td>{{ race.prix_vente_kg }}</td>
+        <td>{{ race.prix_achat_unitaire }}</td>
+        <td>
+          <button class="btn-edit" (click)="ouvrirModif(race)">Modifier</button>
+          <button class="btn-delete" (click)="supprimer(race.id)">Supprimer</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p *ngIf="!isLoading && races.length === 0">Aucune race trouvée</p>
+</div>

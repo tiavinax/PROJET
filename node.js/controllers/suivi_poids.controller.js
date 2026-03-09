@@ -1,17 +1,12 @@
 const SuiviPoids = require('../models/suivi_poids.model');
 
-// GET /api/suivi-poids?lot_id=1
+// GET /api/suivi-poids
+// GET /api/suivi-poids?race_id=1
 exports.getAll = async (req, res) => {
     try {
-        // Si lot_id fourni → filtrer par lot, sinon tout récupérer
-        const { lot_id } = req.query;
-
-        const suivis = lot_id
-            ? await SuiviPoids.findByLot(lot_id)
-            : await SuiviPoids.findAll();
-
+        const { race_id } = req.query;
+        const suivis = await SuiviPoids.findAll(race_id || null);
         res.json({ success: true, data: suivis });
-
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -21,37 +16,13 @@ exports.getAll = async (req, res) => {
 exports.getById = async (req, res) => {
     try {
         const suivi = await SuiviPoids.findById(req.params.id);
-
         if (!suivi) {
             return res.status(404).json({
                 success: false,
                 message: 'Suivi non trouvé'
             });
         }
-
         res.json({ success: true, data: suivi });
-
-    } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
-    }
-};
-
-// GET /api/suivi-poids/lot/:lotId/date?date=2026-01-22
-exports.getByLotAndDate = async (req, res) => {
-    try {
-        const { lotId } = req.params;
-        const { date } = req.query;
-
-        if (!date) {
-            return res.status(400).json({
-                success: false,
-                message: 'Paramètre date manquant'
-            });
-        }
-
-        const suivis = await SuiviPoids.findByLotAndDate(lotId, date);
-        res.json({ success: true, data: suivis });
-
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -60,15 +31,24 @@ exports.getByLotAndDate = async (req, res) => {
 // POST /api/suivi-poids
 exports.create = async (req, res) => {
     try {
-        const { lot_id, semaine, date_mesure, 
-                poids_recueilli_grammes, sakafo_consomme_grammes } = req.body;
+        const { race_id, semaine, 
+                poids_recueilli_grammes, 
+                sakafo_consomme_grammes } = req.body;
 
-        // Validation simple
-        if (!lot_id || semaine === undefined || !date_mesure || 
-            !poids_recueilli_grammes || !sakafo_consomme_grammes) {
+        // Validation robuste
+        const champsManquants = [];
+        if (!race_id)                          champsManquants.push('race_id');
+        if (semaine === null || 
+            semaine === undefined || 
+            semaine === '')                     champsManquants.push('semaine');
+        if (!poids_recueilli_grammes)          champsManquants.push('poids_recueilli_grammes');
+        if (sakafo_consomme_grammes === null || 
+            sakafo_consomme_grammes === undefined) champsManquants.push('sakafo_consomme_grammes');
+
+        if (champsManquants.length > 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Champs manquants : lot_id, semaine, date_mesure, poids_recueilli_grammes, sakafo_consomme_grammes'
+                message: `Champs manquants : ${champsManquants.join(', ')}`
             });
         }
 
@@ -82,7 +62,6 @@ exports.create = async (req, res) => {
         });
 
     } catch (error) {
-        // Erreur doublon semaine
         res.status(400).json({ success: false, message: error.message });
     }
 };
@@ -91,21 +70,14 @@ exports.create = async (req, res) => {
 exports.update = async (req, res) => {
     try {
         const updated = await SuiviPoids.update(req.params.id, req.body);
-
         if (!updated) {
             return res.status(404).json({
                 success: false,
                 message: 'Suivi non trouvé'
             });
         }
-
         const suivi = await SuiviPoids.findById(req.params.id);
-        res.json({
-            success: true,
-            message: 'Suivi modifié avec succès',
-            data: suivi
-        });
-
+        res.json({ success: true, message: 'Suivi modifié', data: suivi });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
@@ -115,19 +87,13 @@ exports.update = async (req, res) => {
 exports.delete = async (req, res) => {
     try {
         const deleted = await SuiviPoids.delete(req.params.id);
-
         if (!deleted) {
             return res.status(404).json({
                 success: false,
                 message: 'Suivi non trouvé'
             });
         }
-
-        res.json({
-            success: true,
-            message: 'Suivi supprimé avec succès'
-        });
-
+        res.json({ success: true, message: 'Suivi supprimé' });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
