@@ -229,3 +229,51 @@ Boutons :
 ***
 FIN DU DOCUMENT
 ***
+
+
+# Proposition d'amélioration : 
+## 1 : Dashboard avec graphiques : 
+    Objectif : Visualiser l'évolution des lots dans le temps
+
+Composants à ajouter :
+
+typescript
+// 1. Nouveau modèle
+export interface GraphData {
+    date: string;
+    lots_actifs: number;
+    poids_moyen_global: number;
+    mortalite_cumulee: number;
+    oeufs_pondus: number;
+}
+
+// 2. Nouvelle API endpoint
+router.get('/dashboard/evolution', dashboardController.getEvolution);
+Fonctionnalités :
+
+Courbe d'évolution du poids moyen par race
+
+Histogramme de mortalité par semaine
+
+Cumul des œufs pondus
+
+Sélecteur de période (7j, 30j, 90j)
+
+# Proposition d'amélioration #2 : Alertes et notifications : 
+Objectif : Prévenir l'utilisateur des situations anormales
+
+// Dans situation.controller.js - à ajouter
+const alertes = [];
+
+// Alerte si mortalité > 5% sur une semaine
+if ((morts_semaine / nb_initial) > 0.05) {
+    alertes.push(`⚠️ Mortalité élevée dans le lot #${lot.id}`);
+}
+
+// Alerte si poids < 80% du poids attendu
+if (poids_moyen < (poids_theorique * 0.8)) {
+    alertes.push(`⚠️ Retard de croissance - lot #${lot.id}`);
+}
+
+// Alerte si stock œufs bas pour transformation 
+

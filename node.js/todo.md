@@ -31,209 +31,232 @@
 
 ## ETAPE :
 
-Les données qu'on doit calculer par lot
-1. nb_akoho — Nombre de poulets vivants
-nb_akoho = nombre_initial - total_morts (jusqu'à la date filtre)
+Conception complète — Gestion Ferme Avicole
 
-2. Achat_akoho — Coût d'achat
-Achat_akoho = prix_achat_total  (fixe, ne change pas)
+1. Architecture technique
+Front-end  : Angular (standalone components, TypeScript)
+Back-end   : Node.js / Express
+Base de données : MariaDB / MySQL
 
-3. Sakafo_lany — Nourriture consommée
-// Seulement les semaines AVANT la date filtre
-Sakafo_lany = SUM(sakafo_consomme_grammes) × prix_par_gramme 
-                pour toutes les semaines où date_mesure <= date_filtre
+2. Schéma de la base de données
+RACE
+  id, nom, prix_vente_kg, prix_achat_unitaire, prix_vente_gramme
 
-4. poids_moyen — Poids actuel
-// Le dernier suivi de poids AVANT la date filtre
-poids_moyen = poids_moyen_grammes 
-              de la ligne SUIVI_POIDS la plus récente <= date_filtre
+LOT
+  id, date_entree, nombre_initial, nombre_restant,
+  race_id → RACE, age_entree_semaines,
+  prix_achat_total, est_actif, nb_atody
 
-5. Prix_vente — Ce qu'on gagnerait si on vendait aujourd'hui
-Prix_vente = (poids_moyen / 1000) × prix_vente_kg × nb_akoho
+SUIVI_POIDS
+  id, race_id → RACE, semaine,
+  poids_recueilli_grammes, sakafo_consomme_grammes
+  UNIQUE (race_id, semaine)
 
-6. nb_atody — Nombre d'œufs
-nb_atody = SUM(nombre_oeufs) 
-           de RECENSEMENT_OEUF où date_recensement <= date_filtre
+MORTALITE
+  id, lot_id → LOT, date_mortalite, nombre_morts
 
-7. prix_atody — Valeur des œufs
-// On a besoin d'un prix unitaire par œuf — tu l'as dans ta BD ?
-prix_atody = nb_atody × prix_unitaire_oeuf
+RECENSEMENT_OEUF
+  id, lot_id → LOT, date_recensement, nombre_oeufs
 
-8. Benefice
-Benefice = (Prix_vente + prix_atody) - (Achat_akoho + Sakafo_lany)
+TRANSFORMATION_OEUF
+  id, lot_source_id → LOT,
+  recensement_source_id → RECENSEMENT_OEUF,
+  date_transformation, nombre_oeufs,
+  nombre_poussins_obtenus, nombre_perte,
+  lot_destination_id → LOT
 
+PRIX_SAKAFO
+  id, race_id → RACE (UNIQUE), prix_par_gramme
 
-CREATE TABLE PRIX_ATODY (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    race_id INT,
-    prix_unitaire DECIMAL(10,2),  -- Prix par oeuf en Ariary
-    date_debut DATE,              -- A partir de quelle date ce prix est valide
-    FOREIGN KEY (race_id) REFERENCES RACE(id)
-);
-```
+PRIX_ATODY
+  id, race_id → RACE, prix_unitaire, date
 
----
+3. Règles métier par entité
+RACE
 
-## 2. La logique du calcul Sakafo — le plus complexe
-
-### Principe de base
-```
-date_entree lot : 01/01/2026
-Semaine 1 : 01/01 → 07/01
-Semaine 2 : 08/01 → 14/01
-Semaine 3 : 15/01 → 21/01
-```
-
-### Calculer les bornes d'une semaine
-```
-debut_semaine = date_entree + (numero_semaine - 1) × 7 jours
-fin_semaine   = date_entree + (numero_semaine × 7) - 1 jour
-```
-
-### Les 3 cas possibles selon date_filtre
-
-**Cas 1 — Semaine complètement passée**
-```
-fin_semaine < date_filtre
-→ sakafo_semaine = sakafo_consomme_grammes (100%)
-```
-
-**Cas 2 — Semaine en cours (date_filtre est DANS la semaine)**
-```
-debut_semaine <= date_filtre <= fin_semaine
-→ jours_ecoules = date_filtre - debut_semaine + 1
-→ sakafo_semaine = (sakafo_consomme_grammes / 7) × jours_ecoules
-```
-
-**Cas 3 — Semaine future**
-```
-debut_semaine > date_filtre
-→ sakafo_semaine = 0  (pas encore consommé)
-```
-
-### Exemple concret
-```
-date_entree : 01/01/2026
-date_filtre : 17/01/2026  (mercredi de la semaine 3)
-
-Semaine 1 (01/01→07/01) : fin < filtre → 100% → 1000g
-Semaine 2 (08/01→14/01) : fin < filtre → 100% → 2000g
-Semaine 3 (15/01→21/01) : filtre DANS semaine
-    → jours_ecoules = 17/01 - 15/01 + 1 = 3 jours
-    → sakafo = (3000 / 7) × 3 = 1286g
-
-Total grammes = 1000 + 2000 + 1286 = 4286g
-Sakafo_lany(Ar) = 4286 × prix_par_gramme
-```
-
----
-
-## 3. Tous les calculs de la Situation
-```
-nb_akoho      = nombre_initial - SUM(morts jusqu'à date_filtre)
-
-Achat_akoho   = prix_achat_total  (fixe)
-
-Sakafo_lany   = SUM(sakafo_semaine_calculé) × prix_par_gramme
-
-poids_moyen   = poids_moyen_grammes du dernier SUIVI_POIDS 
-                où date_mesure <= date_filtre
-
-Prix_vente    = (poids_moyen / 1000) × prix_vente_g(en va ajouter une colonne prix en gramme pour flexibliter et on va l'utiliser) × nb_akoho
-
-nb_atody      = SUM(nombre_oeufs) où date <= date_filtre
-
-Prix_atody    = nb_atody × prix_unitaire_oeuf (selon race)
-
-Benefice      = (Prix_vente + Prix_atody) - (Achat_akoho + Sakafo_lany)
-```
-
----
-
-## 4. L'architecture du code
-```
-[Angular]
-    → Sélecteur de date
-    → Envoie GET /api/situation?date=2026-01-17
-            ↓
-[Node.js — SituationController]
-    → Pour chaque lot actif :
-        1. calculerNbAkoho(lot, date)
-        2. calculerSakafoLany(lot, date)
-            2a. calculerBornesSemaine(date_entree, num_semaine)
-            2b. calculerSakafoSemaine(semaine, date_filtre, date_entree)
-        3. calculerPoidsMoyen(lot, date)
-        4. calculerPrixVente(lot, poids_moyen, nb_akoho)
-        5. calculerNbAtody(lot, date)
-        6. calculerPrixAtody(lot, nb_atody)
-        7. calculerBenefice(...)
-            ↓
-[Angular]
-    → Affiche le tableau Situation
-```
-
----
-
-## Une seule question avant de coder
-
-Pour `prix_par_gramme` du sakafo — il est dans ta table `PRIX_SAKAFO` avec `date_debut` et `date_fin`. Est-ce que le prix **peut changer** au cours du temps pour le même lot ? 
-
-Par exemple :
-```
-Semaine 1-3 : 150 Ar/g
-Semaine 4+  : 180 Ar/g  (prix a augmenté)
-```
-
-Si oui, le calcul devient :
-```
-sakafo_lany = SUM(sakafo_semaine × prix_valide_cette_semaine)
-```
-
-Si non (prix fixe pour toute la durée), c'est plus simple :
-```
-sakafo_lany = total_grammes × prix_unique
+Une race définit le profil de croissance (suivi poids) commun à tous les lots de cette race
+Une race a un prix de vente au gramme utilisé pour calculer le prix vente des lots
+Une race a un prix sakafo (aliment) au gramme dans PRIX_SAKAFO
+Une race a un prix atody (œuf) unitaire dans PRIX_ATODY
 
 
+LOT
 
-    TODO : 
-1. Modifier la BD (nouvelles colonnes/tables)
-2. Node.js — model situation
-3. Node.js — controller situation  
-4. Node.js — route situation
-5. Tester avec le navigateur
-6. Angular ensuite
-
+Un lot = un groupe d'animaux de même race entrés à la même date
+nombre_restant = nombre_initial - total morts
+est_actif = 1 tant que le lot est en vie
+Un lot peut être créé manuellement ou issu d'une transformation (incubation d'œufs)
+age_entree_semaines = âge des animaux à leur entrée dans le lot (0 pour des poussins)
 
 
+SUIVI_POIDS
+
+Lié à une RACE (pas un lot) — le tableau de croissance est identique pour tous les lots de même race
+semaine 0 = poids initial à l'entrée (sakafo = 0)
+semaine N = poids cumulé et sakafo consommé durant la période S(N-1) → S(N)
+La date réelle de chaque semaine est calculée automatiquement :
+
+date_semaine_N = date_entree_lot + N × 7 jours
+
+MORTALITE
+
+Enregistrement des morts par lot et par date
+nombre_morts toujours positif
+Réduit le nombre_restant du lot
 
 
+RECENSEMENT_OEUF
+
+Comptage des œufs pondus par lot à une date donnée
+nombre_oeufs peut être négatif (déduction après transformation)
+Le stock disponible d'un recensement =
+
+nombre_oeufs - SUM(transformations liées à ce recensement)
+
+TRANSFORMATION_OEUF
+
+Transforme des œufs d'un recensement précis en poussins
+Crée automatiquement un nouveau lot destination
+Le nouveau lot hérite de la race du lot source
+Enregistre la perte :
+
+nombre_perte = nombre_oeufs - nombre_poussins_obtenus
+
+La suppression d'une transformation supprime aussi le lot destination (rollback complet)
 
 
-Sakafo_lany = SakafoLanySemaine(semaine, dateEntreeLot, dateFiltre) * prix_sakafo;
+PRIX_SAKAFO
 
-SakafoLanySemaine :
-
-par example : date entrer du race_id = 1 (2026-03-07)
-
-+----+---------+---------+-------------------------+-------------------------+
-| id | race_id | semaine | poids_recueilli_grammes | sakafo_consomme_grammes |
-+----+---------+---------+-------------------------+-------------------------+
-|  1 |       1 |       0 |                     150 |                       0 |
-|  2 |       1 |       1 |                     100 |                     150 |
-|  3 |       1 |       2 |                     150 |                     200 |
-|  4 |       1 |       3 |                     300 |                     500 |
-|  5 |       1 |       4 |                     350 |                     500 |
-
-date filtre : 2026-03-09
-
-le calcul devrait etre commme suivant : puisque 9 est dans le semain 1
-
-sakafo_semaine = 150(sakafo_consomme_grammes) / 7 * 3(car 07->09) = 64.2857 g
-Sakafo_lany = sakafo_semaine * prix_sakafo = 64.2857g * 120Ar/g = 7714.285714Ar
-et le calcul du poids moyen et le meme :
-
-Poids_moyen = 150g(poids initial au semaine 0) + 100(poids_recueilli_grammes du semaine 1) / 7 * 3 = 192.857g
+Un prix par race (UNIQUE)
+Utilisé pour calculer le coût alimentaire dans la situation
 
 
+PRIX_ATODY
+
+Un prix par race
+Utilisé pour calculer le revenu des œufs dans la situation
 
 
+4. Calculs métier — Situation à une date filtre
+Pour chaque lot actif à la date filtre :
+
+nb_akoho
+nb_akoho = nombre_initial - SUM(morts jusqu'à date_filtre)
+
+Bornes temporelles d'une semaine
+La semaine N couvre la période :
+  debut = date_entree_lot + (N-1) × 7 jours
+  fin   = date_entree_lot + (N  ) × 7 jours - 1
+
+Exemple — lot entré le 07/03 :
+  S1 : debut=07/03  fin=13/03
+  S2 : debut=14/03  fin=20/03
+  S3 : debut=21/03  fin=27/03
+
+Contribution d'une semaine (sakafo ou poids)
+Semaine 0 :
+  poids  → valeur complète (poids initial)
+  sakafo → 0 (pas d'alimentation le jour d'entrée)
+
+Semaine N > 0 :
+  Cas 1 — période future   (debut > date_filtre)
+    → contribution = 0
+
+  Cas 2 — période complète (fin < date_filtre)
+    → contribution = valeur_semaine (100%)
+
+  Cas 3 — période en cours (debut <= date_filtre <= fin)
+    → jours_ecoules = date_filtre - debut + 1
+    → contribution  = (valeur_semaine / 7) × jours_ecoules
+
+sakafo_lany (coût alimentaire)
+totalSakafoGrammes = SUM( contribution_sakafo(semaine N) )
+sakafo_lany (Ar)   = totalSakafoGrammes × prix_par_gramme (PRIX_SAKAFO)
+
+poids_moyen
+poids_moyen (g) = SUM( contribution_poids(semaine N) )
+
+Exemple — lot Gasy entré 07/03, filtre 09/03 :
+  S0 : 150g (complet)
+  S1 : 100g / 7 × 3 jours = 42.857g
+  S2, S3, S4 → 0 (futurs)
+
+  poids_moyen = 150 + 42.857 = 192.857g
+
+prix_vente
+prix_vente (Ar) = poids_moyen × prix_vente_gramme × nb_akoho
+
+nb_atody et prix_atody
+nb_atody   = SUM(nombre_oeufs dans RECENSEMENT_OEUF jusqu'à date_filtre)
+             (inclut les valeurs négatives des transformations)
+
+prix_atody = nb_atody × prix_unitaire (PRIX_ATODY de la race)
+
+benefice
+revenus  = prix_vente + prix_atody
+charges  = prix_achat_total + sakafo_lany
+
+benefice = revenus - charges
+
+5. Flux de transformation œufs → poussins
+Étape 1 — Choisir le lot source (pondeuses)
+
+Étape 2 — Choisir le recensement précis
+  → Chaque recensement = une ponte à une date précise
+  → Stock restant = nombre_oeufs - déjà transformés
+  → Les œufs du 07/03 et du 20/03 ont des temps
+    d'incubation différents → on distingue chaque ponte
+
+Étape 3 — Saisir nombre_oeufs_utilisés
+  → Limité au stock restant du recensement choisi
+
+Étape 4 — Saisir nombre_poussins_obtenus
+  → perte = nombre_oeufs - nombre_poussins_obtenus
+
+Résultat :
+  → Nouveau LOT créé automatiquement (poussins)
+  → Race héritée du lot source
+  → Suppression = rollback complet (lot destination supprimé)
+
+6. Routes API
+GET/POST/PUT/DELETE  /api/races
+GET/POST/PUT/DELETE  /api/lots
+GET/POST/PUT/DELETE  /api/suivi-poids
+GET/POST/PUT/DELETE  /api/mortalite
+GET/POST/PUT/DELETE  /api/recensement-oeuf
+GET/POST/PUT/DELETE  /api/prix-sakafo
+GET/POST/PUT/DELETE  /api/prix-atody
+GET/POST/DELETE      /api/transformation-oeuf
+GET                  /api/transformation-oeuf/recensements-disponibles/:lotId
+GET                  /api/situation?date=YYYY-MM-DD
+POST                 /api/reinitialiser
+
+7. Pages Angular
+/situation          → Tableau de bord — calculs à une date
+/lots               → Liste et gestion des lots
+/races              → Liste et gestion des races
+/suivi-poids        → Tableau de croissance par race
+/mortalite          → Enregistrement des morts
+/prix-sakafo        → Prix aliment par race
+/prix-atody         → Prix œuf par race
+/recensement-oeuf   → Comptage des œufs par lot
+/transformation-oeuf→ Incubation œufs → poussins
+
+8. Points importants à retenir
+1. SUIVI_POIDS lié à RACE (pas LOT)
+   → même tableau de croissance pour tous les lots de même race
+
+2. date_entree du LOT est la référence temporelle
+   → toutes les semaines sont calculées depuis cette date
+
+3. Semaine 0 = jour d'entrée
+   → poids initial enregistré, sakafo = 0
+
+4. RECENSEMENT_OEUF accepte les négatifs
+   → les transformations déduisent via une ligne négative
+
+5. Timezone MySQL → toujours nettoyer avec split('T')[0]
+   avant tout calcul de date en JavaScript
+
+6. Validation semaine 0 → utiliser === null/undefined/''
+   et jamais !semaine (car !0 = true en JavaScript)
