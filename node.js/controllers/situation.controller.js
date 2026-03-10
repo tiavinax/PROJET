@@ -127,7 +127,7 @@ exports.getSituation = async (req, res) => {
                 lot.date_entree,
                 dateFiltre
             );
-            const sakafo_lany = sakafoGrammes * Number(lot.sakafo_prix || 0);
+            const sakafo_lany = sakafoGrammes * Number(lot.sakafo_prix || 0) * nb_akoho;
 
             // 4. Poids moyen
             const poids_moyen = calculerPoidsMoyen(
