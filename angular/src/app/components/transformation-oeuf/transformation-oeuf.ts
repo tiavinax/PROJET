@@ -1,9 +1,7 @@
 import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { TransformationOeuf } from '../../models/transformation-oeuf.model';
 import { TransformationOeufService } from '../../services/transformation-oeuf.service';
-import { RecensementOeufService } from '../../services/recensement-oeuf.service';
 import { LotService } from '../../services/lot.service';
 
 @Component({
@@ -15,23 +13,21 @@ import { LotService } from '../../services/lot.service';
 })
 export class TransformationOeufComponent implements OnInit {
 
-  transformations: TransformationOeuf[] = [];
+  transformations: any[] = [];
   lots: any[] = [];
+  recensementsDisponibles: any[] = [];  // ← recensements du lot choisi
   isLoading = false;
   erreur = '';
 
-  // Formulaire
   showForm = false;
   form: any = this.formVide();
 
-  // Infos calculées en temps réel
-  stockAtodyDisponible = 0;   // atody disponibles dans le lot source
-  raceNomSource = '';          // race du lot source — readonly
-  nombrePerte = 0;             // calculé automatiquement
+  raceNomSource = '';
+  stockRestantRecensement = 0;  // ← stock du recensement choisi
+  nombrePerte = 0;
 
   constructor(
     private transformationService: TransformationOeufService,
-    private recensementService: RecensementOeufService,
     private lotService: LotService,
     private cdr: ChangeDetectorRef
   ) {}
@@ -44,6 +40,7 @@ export class TransformationOeufComponent implements OnInit {
   formVide() {
     return {
       lot_source_id: null,
+      recensement_source_id: null,   // ← nouveau
       date_transformation: '',
       nombre_oeufs: null,
       nombre_poussins_obtenus: null,
@@ -54,10 +51,7 @@ export class TransformationOeufComponent implements OnInit {
 
   chargerLots(): void {
     this.lotService.getLots().subscribe({
-      next: (response) => {
-        if (response.success) this.lots = response.data;
-        this.cdr.detectChanges();
-      },
+      next: (r) => { if (r.success) this.lots = r.data; this.cdr.detectChanges(); },
       error: () => {}
     });
   }
@@ -65,8 +59,8 @@ export class TransformationOeufComponent implements OnInit {
   chargerTransformations(): void {
     this.isLoading = true;
     this.transformationService.getAll().subscribe({
-      next: (response) => {
-        if (response.success) this.transformations = response.data;
+      next: (r) => {
+        if (r.success) this.transformations = r.data;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -78,47 +72,63 @@ export class TransformationOeufComponent implements OnInit {
     });
   }
 
-  // Appelé quand l'utilisateur choisit un lot source
+  // Étape 1 — Choisir le lot source
   onLotSourceChange(): void {
-    if (!this.form.lot_source_id) {
-      this.stockAtodyDisponible = 0;
-      this.raceNomSource = '';
-      return;
-    }
+    this.form.recensement_source_id = null;
+    this.recensementsDisponibles = [];
+    this.stockRestantRecensement = 0;
+    this.raceNomSource = '';
+    this.form.nombre_oeufs = null;
 
-    // Récupérer la race du lot source
+    if (!this.form.lot_source_id) return;
+
+    // Race du lot source
     const lotSource = this.lots.find(l => l.id == this.form.lot_source_id);
-    if (lotSource) {
-      this.raceNomSource = lotSource.race_nom;
-    }
+    if (lotSource) this.raceNomSource = lotSource.race_nom;
 
-    // Récupérer le stock atody disponible
-    const dateFiltre = new Date().toISOString().split('T')[0];
-    this.recensementService.getAll(this.form.lot_source_id).subscribe({
-      next: (response) => {
-        if (response.success) {
-          // Sommer tous les recensements (y compris les négatifs)
-          this.stockAtodyDisponible = response.data.reduce(
-            (sum: number, r: any) => sum + r.nombre_oeufs, 0
-          );
-        }
-        console.debug(this.stockAtodyDisponible);
+    // Charger les recensements disponibles du lot
+    this.transformationService.getRecensementsDisponibles(this.form.lot_source_id).subscribe({
+      next: (r) => {
+        if (r.success) this.recensementsDisponibles = r.data;
         this.cdr.detectChanges();
       },
-      error: () => {}
+      error: () => {
+        this.erreur = 'Erreur chargement recensements';
+        this.cdr.detectChanges();
+      }
     });
   }
 
-  // Calculer la perte en temps réel
+  // Étape 2 — Choisir le recensement
+  onRecensementChange(): void {
+    this.form.nombre_oeufs = null;
+    this.stockRestantRecensement = 0;
+
+    if (!this.form.recensement_source_id) return;
+
+    const rec = this.recensementsDisponibles.find(
+      r => r.id == this.form.recensement_source_id
+    );
+    if (rec) {
+      this.stockRestantRecensement = rec.stock_restant;
+      // Pré-remplir la date avec la date du recensement
+      if (!this.form.date_transformation) {
+        this.form.date_transformation = rec.date_recensement?.split('T')[0] || '';
+      }
+    }
+    this.cdr.detectChanges();
+  }
+
   calculerPerte(): void {
-    const oeufs = this.form.nombre_oeufs || 0;
+    const oeufs    = this.form.nombre_oeufs || 0;
     const poussins = this.form.nombre_poussins_obtenus || 0;
     this.nombrePerte = oeufs - poussins;
   }
 
   ouvrirAjout(): void {
     this.form = this.formVide();
-    this.stockAtodyDisponible = 0;
+    this.recensementsDisponibles = [];
+    this.stockRestantRecensement = 0;
     this.raceNomSource = '';
     this.nombrePerte = 0;
     this.erreur = '';
@@ -126,9 +136,9 @@ export class TransformationOeufComponent implements OnInit {
   }
 
   enregistrer(): void {
-    // Validation
-    if (!this.form.lot_source_id || !this.form.date_transformation ||
-        !this.form.nombre_oeufs || !this.form.nombre_poussins_obtenus) {
+    if (!this.form.lot_source_id || !this.form.recensement_source_id ||
+        !this.form.date_transformation || !this.form.nombre_oeufs ||
+        !this.form.nombre_poussins_obtenus) {
       this.erreur = 'Tous les champs obligatoires doivent être remplis';
       this.cdr.detectChanges();
       return;
@@ -140,8 +150,8 @@ export class TransformationOeufComponent implements OnInit {
       return;
     }
 
-    if (this.form.nombre_oeufs > this.stockAtodyDisponible) {
-      this.erreur = `Stock insuffisant : seulement ${this.stockAtodyDisponible} atody disponibles`;
+    if (this.form.nombre_oeufs > this.stockRestantRecensement) {
+      this.erreur = `Stock insuffisant : seulement ${this.stockRestantRecensement} œufs disponibles`;
       this.cdr.detectChanges();
       return;
     }
@@ -149,11 +159,11 @@ export class TransformationOeufComponent implements OnInit {
     this.erreur = '';
 
     this.transformationService.create(this.form).subscribe({
-      next: (response) => {
-        if (response.success) {
+      next: (r) => {
+        if (r.success) {
           this.showForm = false;
           this.chargerTransformations();
-          this.chargerLots(); // Recharger car nouveau lot créé
+          this.chargerLots();
         }
         this.cdr.detectChanges();
       },
@@ -167,15 +177,8 @@ export class TransformationOeufComponent implements OnInit {
   supprimer(id: number): void {
     if (confirm('Annuler cette transformation ? Le lot destination sera supprimé.')) {
       this.transformationService.delete(id).subscribe({
-        next: () => {
-          this.chargerTransformations();
-          this.chargerLots();
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.erreur = 'Erreur suppression';
-          this.cdr.detectChanges();
-        }
+        next: () => { this.chargerTransformations(); this.chargerLots(); this.cdr.detectChanges(); },
+        error: () => { this.erreur = 'Erreur suppression'; this.cdr.detectChanges(); }
       });
     }
   }

@@ -20,7 +20,7 @@ CREATE TABLE RACE (
     prix_vente_gramme DECIMAL(10,4),
     prix_achat_unitaire DECIMAL(10,2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Table des lots
 CREATE TABLE LOT (
@@ -35,7 +35,7 @@ CREATE TABLE LOT (
     nb_atody INT DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (race_id) REFERENCES RACE(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 CREATE TABLE PRIX_SAKAFO (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -62,20 +62,22 @@ CREATE TABLE RECENSEMENT_OEUF (
     date_recensement DATE,
     nombre_oeufs INT,
     FOREIGN KEY (lot_id) REFERENCES LOT(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+);
 
 -- Table de transformation œufs → poulets
 CREATE TABLE TRANSFORMATION_OEUF (
     id INT PRIMARY KEY AUTO_INCREMENT,
     lot_source_id INT,
+    recensement_source_id INT,
     date_transformation DATE,
     nombre_oeufs INT,
     nombre_poussins_obtenus INT,
     nombre_perte INT,
     lot_destination_id INT,
     FOREIGN KEY (lot_source_id) REFERENCES LOT(id) ON DELETE SET NULL,
-    FOREIGN KEY (lot_destination_id) REFERENCES LOT(id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    FOREIGN KEY (lot_destination_id) REFERENCES LOT(id) ON DELETE SET NULL,
+    FOREIGN KEY (recensement_source_id) REFERENCES RECENSEMENT_OEUF(id)
+);
 
 -- Table de mortalité
 CREATE TABLE MORTALITE (
@@ -144,6 +146,9 @@ INSERT INTO PRIX_SAKAFO (race_id, prix_par_gramme) VALUES
 INSERT INTO PRIX_ATODY (race_id, prix_unitaire, date_debut) VALUES
 (1, 1000, '2026-07-06'),
 (2, 1500, '2026-07-06');
+
+INSERT INTO TRANSFORMATION_OEUF (lot_source_id, recensement_source_id, date_transformation, nombre_oeufs, nombre_poussins_obtenus, nombre_perte, lot_destination_id) VALUES
+(2, 5, '2026-03-08', 50, 40, 10, 5);
 
 
 SELECT COUNT(*) AS TOTAL FROM RACE;

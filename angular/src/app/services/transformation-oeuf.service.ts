@@ -9,7 +9,7 @@ export class TransformationOeufService {
 
   private apiUrl = 'http://localhost:3000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   getAll(): Observable<any> {
     return this.http.get(`${this.apiUrl}/transformation-oeuf`);
@@ -25,5 +25,9 @@ export class TransformationOeufService {
 
   delete(id: number): Observable<any> {
     return this.http.delete(`${this.apiUrl}/transformation-oeuf/${id}`);
+  }
+
+  getRecensementsDisponibles(lotId: number): Observable<any> {
+    return this.http.get(`${this.apiUrl}/transformation-oeuf/recensements-disponibles/${lotId}`);
   }
 }

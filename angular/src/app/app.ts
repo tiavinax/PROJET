@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet, RouterLink } from '@angular/router';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 
 @Component({
   selector: 'app-root',
@@ -9,7 +9,12 @@ import { HttpClientModule } from '@angular/common/http';
   template: `
     <div class="app">
       <header>
-        <h1>Gestion Ferme Avicole</h1>
+        <div class="header-top">
+          <h1>Gestion Ferme Avicole</h1>
+          <button class="btn-reinitialiser" (click)="reinitialiser()">
+            🗑️ Réinitialiser
+          </button>
+        </div>
         <nav>
           <a routerLink="/lots">LOTS</a>
           <a routerLink="/races">RACES</a>
@@ -36,6 +41,27 @@ import { HttpClientModule } from '@angular/common/http';
       color: white;
       padding: 1rem;
     }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-top h1 {
+      margin: 0;
+    }
+    .btn-reinitialiser {
+      background: #e53935;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+    .btn-reinitialiser:hover {
+      background: #b71c1c;
+    }
     nav {
       margin-top: 1rem;
     }
@@ -53,4 +79,22 @@ import { HttpClientModule } from '@angular/common/http';
     }
   `]
 })
-export class App { }
+export class App {
+
+  constructor(private http: HttpClient) {}
+
+  reinitialiser(): void {
+    if (!confirm('⚠️ ATTENTION : Toutes les données seront supprimées définitivement.\n\nConfirmer la réinitialisation ?')) return;
+    if (!confirm('Dernière confirmation — êtes-vous sûr ?')) return;
+
+    this.http.post('http://localhost:3000/api/reinitialiser', {}).subscribe({
+      next: () => {
+        alert('✅ Base de données réinitialisée !');
+        window.location.reload();
+      },
+      error: () => {
+        alert('❌ Erreur lors de la réinitialisation');
+      }
+    });
+  }
+}

@@ -5,17 +5,14 @@
     <button (click)="ouvrirAjout()">+ Nouvelle transformation</button>
   </div>
 
-  <!-- Erreur -->
   <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
-
-  <!-- Chargement -->
   <p *ngIf="isLoading">Chargement...</p>
 
   <!-- Formulaire -->
   <div *ngIf="showForm" class="form-card">
     <h3>Nouvelle transformation</h3>
 
-    <!-- Lot source -->
+    <!-- Étape 1 — Lot source -->
     <div class="form-row">
       <label>Lot source (avec atody) *</label>
       <select [(ngModel)]="form.lot_source_id" (change)="onLotSourceChange()">
@@ -26,39 +23,55 @@
       </select>
     </div>
 
-    <!-- Race — readonly, vient du lot source -->
+    <!-- Race héritée -->
     <div class="form-row" *ngIf="raceNomSource">
       <label>Race du nouveau lot</label>
       <input type="text" [value]="raceNomSource" readonly class="readonly">
       <small>Héritée du lot source</small>
     </div>
 
-    <!-- Stock disponible — info -->
-    <div class="info-stock" *ngIf="form.lot_source_id">
-      <span>Atody disponibles : </span>
-      <strong [class.zero]="stockAtodyDisponible <= 0">
-        {{ stockAtodyDisponible }}
-      </strong>
+    <!-- Étape 2 — Choisir le recensement -->
+    <div class="form-row" *ngIf="recensementsDisponibles.length > 0">
+      <label>Recensement à transformer *</label>
+      <select [(ngModel)]="form.recensement_source_id" (change)="onRecensementChange()">
+        <option [ngValue]="null">-- Choisir un recensement --</option>
+        <option *ngFor="let rec of recensementsDisponibles" [ngValue]="rec.id">
+          {{ rec.date_recensement | date:'dd/MM/yyyy' }}
+          — {{ rec.stock_restant }} œufs disponibles
+          (sur {{ rec.nombre_oeufs }} pondus)
+        </option>
+      </select>
     </div>
 
-    <!-- Date -->
-    <div class="form-row">
+    <!-- Aucun recensement disponible -->
+    <p *ngIf="form.lot_source_id && recensementsDisponibles.length === 0" class="info-vide">
+      Aucun recensement disponible pour ce lot
+    </p>
+
+    <!-- Stock restant du recensement choisi -->
+    <div class="info-stock" *ngIf="stockRestantRecensement > 0">
+      <span>Stock disponible : </span>
+      <strong>{{ stockRestantRecensement }} œufs</strong>
+    </div>
+
+    <!-- Date transformation -->
+    <div class="form-row" *ngIf="form.recensement_source_id">
       <label>Date transformation *</label>
       <input type="date" [(ngModel)]="form.date_transformation">
     </div>
 
     <!-- Nb oeufs utilisés -->
-    <div class="form-row">
+    <div class="form-row" *ngIf="form.recensement_source_id">
       <label>Nombre d'œufs utilisés *</label>
       <input type="number"
              [(ngModel)]="form.nombre_oeufs"
              (input)="calculerPerte()"
              min="1"
-             [max]="stockAtodyDisponible">
+             [max]="stockRestantRecensement">
     </div>
 
     <!-- Nb poussins obtenus -->
-    <div class="form-row">
+    <div class="form-row" *ngIf="form.nombre_oeufs">
       <label>Nombre de poussins obtenus *</label>
       <input type="number"
              [(ngModel)]="form.nombre_poussins_obtenus"
@@ -67,27 +80,31 @@
              [max]="form.nombre_oeufs">
     </div>
 
-    <!-- Perte calculée automatiquement -->
+    <!-- Perte calculée -->
     <div class="info-perte" *ngIf="form.nombre_oeufs && form.nombre_poussins_obtenus">
       <span>Perte (lamokany) : </span>
       <strong [class.perte]="nombrePerte > 0">{{ nombrePerte }}</strong>
     </div>
 
-    <!-- Age entrée nouveau lot -->
-    <div class="form-row">
+    <!-- Age + Prix — seulement si recensement choisi -->
+    <div class="form-row" *ngIf="form.recensement_source_id">
       <label>Âge entrée nouveau lot (semaines)</label>
       <input type="number" [(ngModel)]="form.age_entree_semaines" min="0">
     </div>
 
-    <!-- Prix achat nouveau lot -->
-    <div class="form-row">
+    <div class="form-row" *ngIf="form.recensement_source_id">
       <label>Prix achat total nouveau lot (Ar)</label>
       <input type="number" [(ngModel)]="form.prix_achat_total_nouveau_lot" min="0">
     </div>
 
-    <div class="form-actions">
+    <div class="form-actions" *ngIf="form.recensement_source_id">
       <button class="btn-annuler" (click)="annuler()">Annuler</button>
       <button class="btn-valider" (click)="enregistrer()">Valider</button>
+    </div>
+
+    <!-- Bouton annuler toujours visible -->
+    <div *ngIf="!form.recensement_source_id" style="margin-top: 1rem;">
+      <button class="btn-annuler" (click)="annuler()">Annuler</button>
     </div>
   </div>
 
@@ -97,7 +114,8 @@
       <tr>
         <th>Lot source</th>
         <th>Race</th>
-        <th>Date</th>
+        <th>Recensement</th>
+        <th>Date transformation</th>
         <th>Œufs utilisés</th>
         <th>Poussins obtenus</th>
         <th>Perte</th>
@@ -108,7 +126,8 @@
     <tbody>
       <tr *ngFor="let t of transformations">
         <td>Lot {{ t.lot_source_id }}</td>
-        <td>{{ t.race_nom }}</td>
+        <td>{{ t.source_race_nom }}</td>
+        <td>{{ t.recensement_date | date:'dd/MM/yyyy' }}</td>
         <td>{{ t.date_transformation | date:'dd/MM/yyyy' }}</td>
         <td>{{ t.nombre_oeufs }}</td>
         <td>{{ t.nombre_poussins_obtenus }}</td>
