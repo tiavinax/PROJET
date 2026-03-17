@@ -3,12 +3,14 @@ export interface Lot {
     date_entree: string;
     nombre_initial: number;
     nombre_restant: number;
+    race_id: number;
+    race_nom: string;
     age_entree_semaines: number;
     prix_achat_total: number;
-    est_actif: boolean;
-    race_id: number;       // ← ajouter
-    race_nom: string;
-}
+    est_actif: number;
+    sexe: 'vavy' | 'lahy' | 'mixte';
+    pourcentage_sexe: number;
+}   
 
 export interface Race {
     id: number;

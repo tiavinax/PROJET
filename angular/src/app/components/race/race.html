@@ -32,6 +32,40 @@
       <input type="number" [(ngModel)]="raceEnCours.prix_achat_unitaire" min="0">
     </div>
 
+    <div class="form-section">
+      <h4>Incubation</h4>
+
+      <div class="form-row">
+        <label>Durée incubation (jours)</label>
+        <input type="number" [(ngModel)]="raceEnCours.duree_incubation" min="1">
+      </div>
+
+      <div class="form-row">
+        <label>Capacité pondaison totale (oeufs)</label>
+        <input type="number" [(ngModel)]="raceEnCours.capacite_pondation" min="0">
+      </div>
+
+      <div class="form-row-double">
+        <div class="form-row">
+          <label>% Vavy (femelles)</label>
+          <input type="number" [(ngModel)]="raceEnCours.pourcentage_vavy"
+                 (input)="onVavyChange()" min="0" max="100">
+        </div>
+        <div class="form-row">
+          <label>% Lahy (mâles)</label>
+          <input type="number" [(ngModel)]="raceEnCours.pourcentage_lahy"
+                 (input)="onLahyChange()" min="0" max="100">
+        </div>
+      </div>
+
+      <div class="info-pourcentage"
+           [class.ok]="raceEnCours.pourcentage_vavy + raceEnCours.pourcentage_lahy === 100"
+           [class.erreur-pct]="raceEnCours.pourcentage_vavy + raceEnCours.pourcentage_lahy !== 100">
+        Total : {{ raceEnCours.pourcentage_vavy + raceEnCours.pourcentage_lahy }}%
+        {{ raceEnCours.pourcentage_vavy + raceEnCours.pourcentage_lahy === 100 ? '✓' : '← doit égaler 100%' }}
+      </div>
+    </div>
+
     <div class="form-actions">
       <button class="btn-annuler" (click)="annuler()">Annuler</button>
       <button class="btn-valider" (click)="enregistrer()">
@@ -47,7 +81,11 @@
         <th>Nom</th>
         <th>Prix vente (Ar/g)</th>
         <th>Prix vente (Ar/kg)</th>
-        <th>Prix achat unitaire (Ar)</th>
+        <th>Prix achat unit.</th>
+        <th>Durée incub. (j)</th>
+        <th>% Vavy</th>
+        <th>% Lahy</th>
+        <th>Capacité pond.</th>
         <th>Actions</th>
       </tr>
     </thead>
@@ -57,6 +95,12 @@
         <td>{{ race.prix_vente_gramme }}</td>
         <td>{{ race.prix_vente_kg }}</td>
         <td>{{ race.prix_achat_unitaire }}</td>
+        <td>{{ race.duree_incubation }}</td>
+        <td>{{ race.pourcentage_vavy }}%</td>
+        <td>{{ race.pourcentage_lahy }}%</td>
+        <td [class.alerte]="race.capacite_pondation < 100">
+          {{ race.capacite_pondation }}
+        </td>
         <td>
           <button class="btn-edit" (click)="ouvrirModif(race)">Modifier</button>
           <button class="btn-delete" (click)="supprimer(race.id)">Supprimer</button>

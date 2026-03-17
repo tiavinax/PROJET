@@ -55,6 +55,10 @@ CREATE TABLE SUIVI_POIDS (
     FOREIGN KEY (race_id) REFERENCES RACE(id) ON DELETE CASCADE
 );
 
+INSERT INTO SUIVI_POIDS (race_id,semaine,poids_recueilli_grammes,sakafo_consomme_grammes) VALUES
+(1, 25, 0, 600);
+;
+
 -- Table du recensement des œufs
 CREATE TABLE RECENSEMENT_OEUF (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -160,5 +164,30 @@ SELECT COUNT(*) AS TOTAL FROM SUIVI_POIDS WHERE lot_id = 1;
 SELECT COUNT(*) AS TOTAL FROM SUIVI_POIDS WHERE lot_id = 2;
 SELECT COUNT(*) AS TOTAL FROM SUIVI_POIDS WHERE lot_id = 3;
 SELECT COUNT(*) AS TOTAL FROM RECENSEMENT_OEUF;
+
+
+-- script du 16/03/26
+
+-- RACE
+ALTER TABLE RACE
+ADD COLUMN pourcentage_vavy   INT DEFAULT 50,
+ADD COLUMN pourcentage_lahy   INT DEFAULT 50,
+ADD COLUMN duree_incubation   INT DEFAULT 21,
+ADD COLUMN capacite_pondation INT DEFAULT 0;
+
+-- LOT
+ALTER TABLE LOT
+ADD COLUMN sexe             ENUM('vavy','lahy','mixte') DEFAULT 'mixte',
+ADD COLUMN pourcentage_sexe INT DEFAULT 100;
+
+-- RECENSEMENT_OEUF
+ALTER TABLE RECENSEMENT_OEUF
+ADD COLUMN pourcentage_lamokany INT DEFAULT 0;
+
+-- script du 17/03/26
+
+ALTER TABLE MORTALITE
+ADD COLUMN pourcentage_vavy INT DEFAULT 50,
+ADD COLUMN pourcentage_lahy INT DEFAULT 50;
 
 

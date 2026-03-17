@@ -40,7 +40,6 @@ router.put('/recensement-oeuf/:id', recensementOeufController.update);
 router.delete('/recensement-oeuf/:id', recensementOeufController.delete);
 
 // ========== TRANSFORMATION OEUF ==========
-// ========== TRANSFORMATION OEUF ==========
 router.get('/transformation-oeuf', transformationOeufController.getAll);
 router.get('/transformation-oeuf/:id', transformationOeufController.getById);
 router.get('/transformation-oeuf/recensements-disponibles/:lotId', transformationOeufController.getRecensementsDisponibles);

@@ -1,16 +1,11 @@
 <div class="container">
   <h2>{{ isEditing ? 'Modifier le lot' : 'Nouveau lot' }}</h2>
 
-  <p *ngIf="isLoading">Chargement...</p>
   <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
   <p *ngIf="succes" class="succes">{{ succes }}</p>
+  <p *ngIf="isLoading">Chargement...</p>
 
   <div class="form-card" *ngIf="!isLoading">
-
-    <div class="form-row">
-      <label>Date d'entrée *</label>
-      <input type="date" [(ngModel)]="lot.date_entree">
-    </div>
 
     <div class="form-row">
       <label>Race *</label>
@@ -23,8 +18,33 @@
     </div>
 
     <div class="form-row">
+      <label>Date d'entrée *</label>
+      <input type="date" [(ngModel)]="lot.date_entree">
+    </div>
+
+    <div class="form-row">
       <label>Nombre initial *</label>
       <input type="number" [(ngModel)]="lot.nombre_initial" min="1">
+    </div>
+
+    <!-- Sexe + Pourcentage -->
+    <div class="form-row">
+      <label>Sexe</label>
+      <select [(ngModel)]="lot.sexe" (change)="onSexeChange()">
+        <option value="mixte">Mixte</option>
+        <option value="vavy">Vavy (femelle)</option>
+        <option value="lahy">Lahy (mâle)</option>
+      </select>
+    </div>
+
+    <div class="form-row" *ngIf="lot.sexe === 'mixte'">
+      <label>% Vavy dans ce lot</label>
+      <div class="input-suffix">
+        <input type="number" [(ngModel)]="lot.pourcentage_sexe"
+               min="1" max="99">
+        <span>%</span>
+      </div>
+      <small>Lahy : {{ 100 - lot.pourcentage_sexe }}%</small>
     </div>
 
     <div class="form-row">
@@ -33,16 +53,15 @@
     </div>
 
     <div class="form-row">
-      <label>Prix achat total (Ar) *</label>
+      <label>Prix achat total (Ar)</label>
       <input type="number" [(ngModel)]="lot.prix_achat_total" min="0">
     </div>
 
     <div class="form-actions">
       <button class="btn-annuler" (click)="annuler()">Annuler</button>
       <button class="btn-valider" (click)="enregistrer()">
-        {{ isEditing ? 'Modifier' : 'Enregistrer' }}
+        {{ isEditing ? 'Modifier' : 'Créer' }}
       </button>
     </div>
-
   </div>
 </div>

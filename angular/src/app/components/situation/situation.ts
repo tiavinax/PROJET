@@ -4,6 +4,8 @@ import localeFr from '@angular/common/locales/fr';
 import { FormsModule } from '@angular/forms';
 import { SituationLot, SituationGlobale, SituationResponse } from '../../models/situation.model';
 import { SituationService } from '../../services/situation.service';
+import { CapaciteRace } from '../../models/situation.model';
+import { CapaciteRaceGlobale } from '../../models/situation.model';
 
 registerLocaleData(localeFr);
 
@@ -19,7 +21,9 @@ export class Situation implements OnInit {
 
   dateFiltre: string = new Date().toISOString().split('T')[0];
   situationLots: SituationLot[] = [];
-  globale?: SituationGlobale;  // ← nouveau
+  globale?: SituationGlobale;  
+  capaciteRaces: CapaciteRace[] = [];
+  capaciteRacesGlobale: CapaciteRaceGlobale[] = [];
   isLoading = false;
   erreur = '';
 
@@ -41,6 +45,8 @@ export class Situation implements OnInit {
         if (response.success) {
           this.situationLots = response.data;
           this.globale = response.globale;  // ← nouveau
+          this.capaciteRaces = response.capaciteRaces || [];
+          this.capaciteRacesGlobale = response.capaciteRacesGlobale || [] ;
         }
         this.isLoading = false;
         this.cdr.detectChanges();

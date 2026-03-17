@@ -13,11 +13,9 @@ import { LotService } from '../../services/lot.service';
 })
 export class LotForm implements OnInit {
 
-  // Les données du formulaire
   lot: any = this.formVide();
   races: any[] = [];
-
-  isEditing = false;    // true = modification, false = création
+  isEditing = false;
   isLoading = false;
   erreur = '';
   succes = '';
@@ -25,15 +23,12 @@ export class LotForm implements OnInit {
   constructor(
     private lotService: LotService,
     private router: Router,
-    private route: ActivatedRoute,   // pour lire l'ID dans l'URL
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
     this.chargerRaces();
-
-    // Vérifier si on est en mode modification
-    // URL /lots/modifier/3 → id = 3
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.isEditing = true;
@@ -43,11 +38,13 @@ export class LotForm implements OnInit {
 
   formVide() {
     return {
-      date_entree: '',
-      nombre_initial: null,
-      race_id: null,
+      date_entree:         '',
+      nombre_initial:      null,
+      race_id:             null,
       age_entree_semaines: 0,
-      prix_achat_total: null
+      prix_achat_total:    null,
+      sexe:                'mixte',   // ← nouveau
+      pourcentage_sexe:    100        // ← nouveau
     };
   }
 
@@ -67,13 +64,14 @@ export class LotForm implements OnInit {
       next: (response) => {
         if (response.success) {
           const l = response.data;
-          // Remplir le formulaire avec les données existantes
           this.lot = {
-            date_entree:          l.date_entree,
-            nombre_initial:       l.nombre_initial,
-            race_id:              l.race_id,
-            age_entree_semaines:  l.age_entree_semaines,
-            prix_achat_total:     l.prix_achat_total
+            date_entree:         l.date_entree?.split('T')[0] || '',
+            nombre_initial:      l.nombre_initial,
+            race_id:             l.race_id,
+            age_entree_semaines: l.age_entree_semaines,
+            prix_achat_total:    l.prix_achat_total,
+            sexe:                l.sexe             || 'mixte',
+            pourcentage_sexe:    l.pourcentage_sexe || 100
           };
         }
         this.isLoading = false;
@@ -87,10 +85,22 @@ export class LotForm implements OnInit {
     });
   }
 
+  // Quand sexe change — ajuster pourcentage automatiquement
+  onSexeChange(): void {
+    if (this.lot.sexe === 'vavy' || this.lot.sexe === 'lahy') {
+      this.lot.pourcentage_sexe = 100;
+    }
+  }
+
   enregistrer(): void {
-    // Validation simple
     if (!this.lot.date_entree || !this.lot.nombre_initial || !this.lot.race_id) {
       this.erreur = 'Date, nombre et race sont obligatoires';
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.lot.pourcentage_sexe < 1 || this.lot.pourcentage_sexe > 100) {
+      this.erreur = 'Pourcentage sexe doit être entre 1 et 100';
       this.cdr.detectChanges();
       return;
     }

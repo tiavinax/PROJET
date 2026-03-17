@@ -16,35 +16,43 @@ export class RaceComponent implements OnInit {
   races: Race[] = [];
   isLoading = false;
   erreur = '';
-
   showForm = false;
   isEditing = false;
   raceEnCours: any = this.formVide();
 
-  constructor(
-    private raceService: RaceService,
-    private cdr: ChangeDetectorRef
-  ) {}
+  constructor(private raceService: RaceService, private cdr: ChangeDetectorRef) {}
 
-  ngOnInit(): void {
-    this.chargerRaces();
-  }
+  ngOnInit(): void { this.chargerRaces(); }
 
   formVide() {
     return {
       id: null,
       nom: '',
-      prix_vente_kg: null,
+      prix_vente_gramme:   null,
+      prix_vente_kg:       null,
       prix_achat_unitaire: null,
-      prix_vente_gramme: null
+      pourcentage_vavy:    50,
+      pourcentage_lahy:    50,
+      duree_incubation:    21,
+      capacite_pondation:  0
     };
+  }
+
+  // Synchroniser lahy quand vavy change
+  onVavyChange(): void {
+    this.raceEnCours.pourcentage_lahy = 100 - (this.raceEnCours.pourcentage_vavy || 0);
+  }
+
+  // Synchroniser vavy quand lahy change
+  onLahyChange(): void {
+    this.raceEnCours.pourcentage_vavy = 100 - (this.raceEnCours.pourcentage_lahy || 0);
   }
 
   chargerRaces(): void {
     this.isLoading = true;
     this.raceService.getAll().subscribe({
-      next: (response) => {
-        if (response.success) this.races = response.data;
+      next: (r) => {
+        if (r.success) this.races = r.data;
         this.isLoading = false;
         this.cdr.detectChanges();
       },
@@ -77,20 +85,26 @@ export class RaceComponent implements OnInit {
       return;
     }
 
+    if ((this.raceEnCours.pourcentage_vavy + this.raceEnCours.pourcentage_lahy) !== 100) {
+      this.erreur = 'Pourcentage vavy + lahy doit égaler 100%';
+      this.cdr.detectChanges();
+      return;
+    }
+
     this.erreur = '';
 
     if (this.isEditing) {
       this.raceService.update(this.raceEnCours.id, this.raceEnCours).subscribe({
-        next: (response) => {
-          if (response.success) { this.showForm = false; this.chargerRaces(); }
+        next: (r) => {
+          if (r.success) { this.showForm = false; this.chargerRaces(); }
           this.cdr.detectChanges();
         },
         error: () => { this.erreur = 'Erreur modification'; this.cdr.detectChanges(); }
       });
     } else {
       this.raceService.create(this.raceEnCours).subscribe({
-        next: (response) => {
-          if (response.success) { this.showForm = false; this.chargerRaces(); }
+        next: (r) => {
+          if (r.success) { this.showForm = false; this.chargerRaces(); }
           this.cdr.detectChanges();
         },
         error: (err) => {
@@ -102,7 +116,7 @@ export class RaceComponent implements OnInit {
   }
 
   supprimer(id: number): void {
-    if (confirm('Supprimer cette race ? Attention : tous les lots liés seront affectés.')) {
+    if (confirm('Supprimer cette race ?')) {
       this.raceService.delete(id).subscribe({
         next: () => { this.chargerRaces(); this.cdr.detectChanges(); },
         error: () => { this.erreur = 'Erreur suppression'; this.cdr.detectChanges(); }
@@ -110,8 +124,5 @@ export class RaceComponent implements OnInit {
     }
   }
 
-  annuler(): void {
-    this.showForm = false;
-    this.erreur = '';
-  }
+  annuler(): void { this.showForm = false; this.erreur = ''; }
 }

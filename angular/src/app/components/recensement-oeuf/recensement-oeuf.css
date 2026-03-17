@@ -77,7 +77,7 @@
 }
 
 table {
-  width: 100%;
+  width: 134%;
   border-collapse: collapse;
   background: white;
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
@@ -115,3 +115,27 @@ tfoot { background: #f0f0f0; font-weight: bold; }
 }
 
 .erreur { color: red; }
+
+.apercu-incubation {
+  background: #f1f8e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+}
+
+.apercu-incubation h4 {
+  margin: 0 0 0.75rem 0;
+  color: #2e7d32;
+}
+
+.apercu-ligne {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid #c8e6c9;
+}
+
+.apercu-ligne:last-child { border-bottom: none; }
+.apercu-ligne.rouge strong { color: #e53935; }
+.apercu-ligne.vert  strong { color: #2e7d32; }

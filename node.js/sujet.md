@@ -277,3 +277,49 @@ if (poids_moyen < (poids_theorique * 0.8)) {
 
 // Alerte si stock œufs bas pour transformation 
 
+
+
+
+
+SUITE DU PROJET : 
+
+On va maitenant modifier un peut quelque fonctionnaliter et implementer d'autres
+
+LE GRAND CHANGMENT : ON VA AUTOMATISER L'INCUBATION(TRANSFORMATION DES OEUFS EN LOT) ET CELA ENTRAINE => 
+* on va ajouter des nouveau colonne dans RACE:
+
+RACE :
+-pourcentage(lahy(male),vavy(femelle)) et pourcentage peut etre un autre table pourcentage(libelle,valeur)
+    ->pourquoi faire : dans le transformation des oeuf seule les vavy qui ponds des oeuf et les nouveau lot au transformation va avoir par exemle 60% vavy / 40% lahy
+    ->duree_incubation(specifique par race , c'est pour ca qu'on le met dans la table race)
+    ->capacite_pondation : int (pour indiquer qu'une poule peut pondre combien de fois durant toute ca vie par exemple : 40oeuf durant toute ca vie)
+
+RECENSEMENT : 
+    -> % lamokany(vue que le transformation est automatique on va fixer le pourcentage des atody lamokany au moment du collecte)
+        impacte : ajout de champ % lamokany
+    Et au moment du rencensement des oeuf on va transformer les atody car on sait a partir du duree_incubation quand les oeuf sera incuber par exemple race : 1 duree_incubation :30 jour date entrer lot1 : 01/01/26 date_transformation : 31/01/26
+
+DEUXIEMEMENT : ON DOIT DONC MODIFIER UN PEUT L'AFFICHAGE DU SITUATION
+AJOUT : % atody_lamokany | perte(si on vend les atody lamokany c'est combinen) 
+
+
+
+    RACE apina : 
+    -%LAHY/VAVY; 
+    -duree_jour_fohy;
+    -%lamokany(incubation);
+    -CAPACITE DE PONDAISON = EX: in 40 manatody ihany ny akoho iray pendant son cycle de vie
+    %atody lamokany(situation) : 
+
+    FONCTIONNALITE : incubation automatique(pourcentage % lamokany fix par race )
+    seule les vavy qui manatody
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,144 @@
+Conception finale validée
+
+1. RACE — nouveaux champs
+sqlRACE :
+  + pourcentage_vavy   INT  -- ex: 60
+  + pourcentage_lahy   INT  -- ex: 40
+  + duree_incubation   INT  -- ex: 21 jours
+  + capacite_pondation INT  -- ex: 40 oeufs/vie
+```
+
+**Pourquoi stocker les deux** (`pourcentage_vavy` ET `pourcentage_lahy`) même si 60+40=100 ?
+```
+→ Données fixes de la race, pas calculées
+→ Pas de risque d'erreur de calcul (100 - vavy)
+→ Plus lisible dans les requêtes SQL
+→ Flexible si un jour vavy + lahy ≠ 100
+   (ex: 5% mort-nés non comptabilisés)
+→ Cohérent avec capacite_pondation et duree_incubation
+   qui sont aussi des données directes
+
+2. LOT — nouveau champ sexe
+sqlLOT :
+  + sexe        ENUM('vavy', 'lahy', 'mixte')
+  + pourcentage INT  -- ex: 60 (% de ce sexe dans le lot)
+```
+
+**Formulaire création lot :**
+```
+Champ existant : race, date_entree, nombre_initial...
+
+Nouveau :
+  Sexe       : [select] vavy | lahy | mixte
+  Pourcentage: [input]  ex: 60%
+               → pré-rempli automatiquement depuis la race
+               → modifiable manuellement
+```
+
+**Exemple :**
+```
+Lot source (pondeuses) → sexe: vavy, pourcentage: 100%
+Nouveau lot après incubation → sexe: mixte, pourcentage: 60% vavy
+
+3. RECENSEMENT_OEUF — nouveau champ
+sqlRECENSEMENT_OEUF :
+  + pourcentage_lamokany INT  -- ex: 10 (%)
+```
+
+**Calculs automatiques à l'affichage :**
+```
+nb_lamokany    = nombre_oeufs × pourcentage_lamokany / 100
+oeufs_valides  = nombre_oeufs - nb_lamokany
+date_incubation= date_recensement + duree_incubation (depuis RACE)
+poussins_attendus = oeufs_valides
+  dont vavy    = oeufs_valides × pourcentage_vavy / 100
+  dont lahy    = oeufs_valides × pourcentage_lahy / 100
+```
+
+---
+
+### 4. Automatisation au recensement
+```
+Quand on VALIDE un recensement :
+
+  Back-end crée automatiquement dans TRANSFORMATION_OEUF :
+    lot_source_id          = lot du recensement
+    recensement_source_id  = ce recensement
+    date_transformation    = date_recensement + duree_incubation
+    nombre_oeufs           = oeufs_valides
+    nombre_poussins_obtenus= oeufs_valides
+    nombre_perte           = nb_lamokany
+
+  ET crée automatiquement un LOT destination :
+    date_entree            = date_transformation
+    nombre_initial         = oeufs_valides
+    nombre_restant         = oeufs_valides
+    race_id                = même race
+    sexe                   = mixte
+    pourcentage            = pourcentage_vavy de la race
+    age_entree_semaines    = 0
+    prix_achat_total       = 0
+```
+
+---
+
+### 5. SITUATION — nouveaux champs
+```
+AVANT :
+  Nb atody | Prix atody
+
+APRÈS :
+  Nb atody (valide) | Prix atody valide
+  Nb lamokany       | Prix lamokany
+  (prix lamokany = même prix_unitaire_atody)
+```
+
+**Calcul :**
+```
+nb_atody_valide  = SUM(recensements) - SUM(lamokany)
+nb_lamokany      = SUM(nombre_oeufs × pourcentage_lamokany / 100)
+
+prix_atody_valide = nb_atody_valide × prix_unitaire_atody
+prix_lamokany     = nb_lamokany     × prix_unitaire_atody
+
+benefice += prix_atody_valide + prix_lamokany
+```
+
+---
+
+### 6. Formulaire TRANSFORMATION — lecture seule
+```
+Navbar : on garde INCUBATION
+Mais :
+  → Pas de bouton "+ Nouvelle transformation"
+  → Seulement le tableau historique
+  → Bouton "Annuler" supprimé aussi
+     (car lié au recensement, pas manuel)
+```
+
+---
+
+### Résumé des fichiers à modifier
+```
+BD :
+  ALTER TABLE RACE         → + 4 champs
+  ALTER TABLE LOT          → + 2 champs (sexe, pourcentage)
+  ALTER TABLE RECENSEMENT_OEUF → + 1 champ
+
+Back-end :
+  race.model.js            → update avec nouveaux champs
+  lot.model.js             → + sexe, pourcentage
+  recensement_oeuf.model.js→ + pourcentage_lamokany
+                             + création auto transformation+lot
+  transformation_oeuf.model.js → lecture seule (findAll, findById)
+  situation.model.js       → + nb_lamokany, prix_lamokany
+
+Angular :
+  race.ts                  → + 4 champs formulaire
+  lot-form.ts              → + select sexe + pourcentage
+  recensement-oeuf.ts      → + pourcentage_lamokany
+                             + affichage calculs temps réel
+  transformation-oeuf.ts   → supprimer formulaire ajout
+  situation.ts/html        → + colonnes lamokany
+
+Tout est clair ? On commence par la BD et le back-end ? Sonnet 4.6Claude est une IA et peut faire des erreurs. Veuillez vérifier les réponses.

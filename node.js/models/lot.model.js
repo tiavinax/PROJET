@@ -13,7 +13,11 @@ class Lot {
                 l.age_entree_semaines,
                 l.prix_achat_total,
                 l.est_actif,
-                r.nom AS race_nom
+                r.nom  AS race_nom,
+                r.prix_vente_gramme,
+                r.duree_incubation,    
+                r.pourcentage_vavy,  
+                r.pourcentage_lahy     
             FROM LOT l
             LEFT JOIN RACE r ON l.race_id = r.id
             ORDER BY l.date_entree DESC
@@ -47,35 +51,51 @@ class Lot {
         };
     }
 
-    // Créer un nouveau lot
-    static async create(lotData) {
-        const { date_entree, nombre_initial, race_id, age_entree_semaines, prix_achat_total } = lotData;
-
-        const [result] = await db.query(
-            `INSERT INTO LOT 
-             (date_entree, nombre_initial, nombre_restant, race_id, age_entree_semaines, prix_achat_total, est_actif) 
-             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [date_entree, nombre_initial, nombre_initial, race_id, age_entree_semaines, prix_achat_total, 1]
-        );
-
+    // Dans createLot — ajouter sexe et pourcentage_sexe
+    static async create(data) {
+        const [result] = await db.query(`
+        INSERT INTO LOT
+            (date_entree, nombre_initial, nombre_restant, race_id,
+             age_entree_semaines, prix_achat_total, est_actif,
+             sexe, pourcentage_sexe)
+        VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)
+    `, [
+            data.date_entree,
+            data.nombre_initial,
+            data.nombre_initial,
+            data.race_id,
+            data.age_entree_semaines || 0,
+            data.prix_achat_total || 0,
+            data.sexe || 'mixte',
+            data.pourcentage_sexe || 100
+        ]);
         return result.insertId;
     }
 
-    // Mettre à jour un lot
-    static async update(id, lotData) {
-        const { date_entree, nombre_initial, race_id, age_entree_semaines, prix_achat_total } = lotData;
-
-        const [result] = await db.query(
-            `UPDATE LOT 
-             SET date_entree = ?, 
-                 nombre_initial = ?, 
-                 race_id = ?, 
-                 age_entree_semaines = ?, 
-                 prix_achat_total = ?
-             WHERE id = ?`,
-            [date_entree, nombre_initial, race_id, age_entree_semaines, prix_achat_total, id]
-        );
-
+    // Dans updateLot — ajouter sexe et pourcentage_sexe
+    static async update(id, data) {
+        const [result] = await db.query(`
+        UPDATE LOT SET
+            date_entree          = ?,
+            nombre_initial       = ?,
+            race_id              = ?,
+            age_entree_semaines  = ?,
+            prix_achat_total     = ?,
+            est_actif            = ?,
+            sexe                 = ?,
+            pourcentage_sexe     = ?
+        WHERE id = ?
+    `, [
+            data.date_entree,
+            data.nombre_initial,
+            data.race_id,
+            data.age_entree_semaines || 0,
+            data.prix_achat_total || 0,
+            data.est_actif ?? 1,
+            data.sexe || 'mixte',
+            data.pourcentage_sexe || 100,
+            id
+        ]);
         return result.affectedRows > 0;
     }
 

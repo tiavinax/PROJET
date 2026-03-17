@@ -1,4 +1,5 @@
 <div class="container">
+  <h1 style="font-size: 50px;">ETU003955</h1>
   <h2>Situation de la ferme</h2>
 
   <!-- Filtre par date -->
@@ -13,7 +14,7 @@
     <div class="stats-grid">
       <!-- Carte Lots actifs -->
       <div class="stat-card">
-        <div class="stat-icon">📦</div>
+        <div class="stat-icon"></div>
         <div class="stat-content">
           <div class="stat-label">Lots actifs</div>
           <div class="stat-value">{{ globale?.total_lots_actifs || 0 }}</div>
@@ -22,7 +23,7 @@
 
       <!-- Carte Poulets vivants -->
       <div class="stat-card">
-        <div class="stat-icon">🐔</div>
+        <!-- <div class="stat-icon">🐔</div> -->
         <div class="stat-content">
           <div class="stat-label">Poulets vivants</div>
           <div class="stat-value">{{ globale?.total_akoho_vivants | number }}</div>
@@ -31,7 +32,7 @@
 
       <!-- Carte Mortalité -->
       <div class="stat-card">
-        <div class="stat-icon">💀</div>
+        <!-- <div class="stat-icon">💀</div> -->
         <div class="stat-content">
           <div class="stat-label">Mortalité totale</div>
           <div class="stat-value">{{ globale?.total_morts | number }}</div>
@@ -41,7 +42,7 @@
 
       <!-- Carte Œufs -->
       <div class="stat-card">
-        <div class="stat-icon">🥚</div>
+        <!-- <div class="stat-icon">🥚</div> -->
         <div class="stat-content">
           <div class="stat-label">Œufs pondus</div>
           <div class="stat-value">{{ globale?.total_oeufs | number }}</div>
@@ -50,7 +51,7 @@
 
       <!-- Carte Poids moyen -->
       <div class="stat-card">
-        <div class="stat-icon">⚖️</div>
+        <!-- <div class="stat-icon"></div> -->
         <div class="stat-content">
           <div class="stat-label">Poids moyen</div>
           <div class="stat-value">{{ globale?.poids_moyen_global }} g</div>
@@ -59,7 +60,7 @@
 
       <!-- Carte Chiffre d'affaires -->
       <div class="stat-card">
-        <div class="stat-icon">💰</div>
+        <!-- <div class="stat-icon"></div> -->
         <div class="stat-content">
           <div class="stat-label">Chiffre d'affaires</div>
           <div class="stat-value">{{ globale?.chiffre_affaires | number }} Ar</div>
@@ -68,7 +69,7 @@
 
       <!-- Carte Charges -->
       <div class="stat-card">
-        <div class="stat-icon">📉</div>
+        <!-- <div class="stat-icon">📉</div> -->
         <div class="stat-content">
           <div class="stat-label">Charges totales</div>
           <div class="stat-value">{{ globale?.charges_totales | number }} Ar</div>
@@ -76,11 +77,12 @@
       </div>
 
       <!-- Carte Bénéfice -->
-      <div class="stat-card benefice" [class.positif]="(globale?.benefice_total || 0) > 0" [class.negatif]="(globale?.benefice_total || 0) < 0">
-        <div class="stat-icon">📊</div>
+      <div class="stat-card benefice" [class.positif]="(globale?.benefice_total || 0) > 0"
+        [class.negatif]="(globale?.benefice_total || 0) < 0">
+        <!-- <div class="stat-icon">📊</div> -->
         <div class="stat-content">
           <div class="stat-label">Bénéfice net</div>
-          <div class="stat-value">{{ globale?.benefice_total | number }} Ar</div>
+          <div class="stat-value-ben">{{ globale?.benefice_total | number }} Ar</div>
         </div>
       </div>
     </div>
@@ -111,8 +113,10 @@
           <th>Morts</th>
           <th>Poids moy (g)</th>
           <th>Prix vente (Ar)</th>
-          <th>Nb œufs</th>
-          <th>Prix œufs (Ar)</th>
+          <th>Œufs valides</th>
+          <th>Prix œufs valides (Ar)</th>
+          <th>Lamokany</th>
+          <th>Perte (Ar)</th>
           <th>Bénéfice (Ar)</th>
         </tr>
       </thead>
@@ -126,8 +130,10 @@
           <td>{{ lot.nb_morts | number }}</td>
           <td>{{ lot.poids_moyen }}</td>
           <td>{{ lot.prix_vente | number }}</td>
-          <td>{{ lot.nb_atody | number }}</td>
-          <td>{{ lot.prix_atody | number }}</td>
+          <td>{{ lot.nb_atody_valides | number }}</td>
+          <td>{{ lot.prix_atody_valides | number }}</td>
+          <td>{{ lot.nb_lamokany | number }}</td>
+          <td>{{ lot.prix_lamokany | number }}</td>
           <td [class.positif]="lot.benefice > 0" [class.negatif]="lot.benefice < 0">
             {{ lot.benefice | number }}
           </td>
@@ -137,18 +143,100 @@
         <tr class="total-row">
           <td colspan="2"><strong>TOTAUX</strong></td>
           <td><strong>{{ globale?.total_akoho_vivants | number }}</strong></td>
-          <td><strong>{{ globale?.charges_totales | number }}</strong></td>
-          <td></td>
+          <!-- <td><strong>{{ globale?.charges_totales | number }}</strong></td> -->
+          <td><strong>{{ globale?.total_achat | number }}</strong></td>
+          <td><strong>{{ globale?.total_sakafo | number }}</strong></td>
           <td><strong>{{ globale?.total_morts | number }}</strong></td>
           <td><strong>{{ globale?.poids_moyen_global }} g</strong></td>
           <td><strong>{{ globale?.chiffre_affaires | number }}</strong></td>
           <td><strong>{{ globale?.total_oeufs | number }}</strong></td>
-          <td></td>
+          <td><strong>{{ globale?.total_prix_atody | number }}</strong></td>
+          <td><strong>{{ globale?.total_lamokany | number }}</strong></td>
+          <td><strong>{{ globale?.total_prix_lamokany | number }}</strong></td>
           <td [class.positif]="(globale?.benefice_total || 0) > 0" [class.negatif]="(globale?.benefice_total || 0) < 0">
-            <strong>{{ globale?.benefice_total | number }} Ar</strong>
+            <strong class="benefice">{{ globale?.benefice_total | number }} Ar</strong>
           </td>
         </tr>
       </tfoot>
+    </table>
+  </div>
+
+  <!-- Section capacité pondaison par race -->
+  <div class="table-container" *ngIf="!isLoading && capaciteRaces.length > 0">
+    <h3>Capacité pondaison par race</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Race</th>
+          <th>% Vavy</th>
+          <th>% Lahy</th>
+          <th>Durée incubation</th>
+          <th>Nb vavy vivantes</th>
+          <th>Capacité / poule</th>
+          <th>Capacité max globale</th>
+          <th>Oeufs collectés</th>
+          <th>Capacité restante globale</th>
+          <th>Capacité restante / poule</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let race of capaciteRaces">
+          <td><strong>{{ race.nom }}</strong></td>
+          <td>{{ race.pourcentage_vavy }}%</td>
+          <td>{{ race.pourcentage_lahy }}%</td>
+          <td>{{ race.duree_incubation }} j</td>
+          <td>{{ race.nb_vavy_vivantes | number }}</td>
+          <td>{{ race.capacite_initiale | number }}</td>
+          <td>{{ race.capacite_max_globale | number }}</td>
+          <td>{{ race.total_oeufs_collectes | number }}</td>
+          <td [class.positif]="race.capacite_restante_globale > 0"
+            [class.negatif]="race.capacite_restante_globale <= 0">
+            <strong>{{ race.capacite_restante_globale | number }}</strong>
+          </td>
+          <td [class.positif]="race.capacite_restante > 0" [class.negatif]="race.capacite_restante <= 0">
+            <strong>{{ race.capacite_restante | number }}</strong>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tableau 2 — Capacité globale de la race -->
+  <div class="table-container" *ngIf="!isLoading && capaciteRacesGlobale.length > 0">
+    <h3>Capacité pondaison globale par race</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Race</th>
+          <th>Capacité / poule</th>
+          <th>Nb vavy vivantes</th>
+          <th>Capacité max</th>
+          <th>Oeufs collectés</th>
+          <th>Capacité restante</th>
+          <th>% utilisé</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let race of capaciteRacesGlobale">
+          <td><strong>{{ race.race_nom }}</strong></td>
+          <td>{{ race.capacite_par_poule | number }}</td>
+          <td>{{ race.nb_vavy_vivantes | number }}</td>
+          <td>{{ race.capacite_max | number }}</td>
+          <td>{{ race.total_oeufs_collectes | number }}</td>
+          <td [class.positif]="race.capacite_restante > 0" [class.negatif]="race.capacite_restante <= 0">
+            <strong>{{ race.capacite_restante | number }}</strong>
+          </td>
+          <td>
+            <!-- Barre de progression -->
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="race.pourcentage_utilise"
+                [class.danger]="race.pourcentage_utilise >= 80">
+              </div>
+              <span>{{ race.pourcentage_utilise }}%</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
     </table>
   </div>
 

@@ -13,10 +13,7 @@
     <button (click)="ouvrirAjout()">+ Ajouter</button>
   </div>
 
-  <!-- Erreur -->
   <p *ngIf="erreur" class="erreur">{{ erreur }}</p>
-
-  <!-- Chargement -->
   <p *ngIf="isLoading">Chargement...</p>
 
   <!-- Formulaire -->
@@ -25,7 +22,9 @@
 
     <div class="form-row">
       <label>Lot *</label>
-      <select [(ngModel)]="recensementEnCours.lot_id" [disabled]="isEditing">
+      <select [(ngModel)]="recensementEnCours.lot_id"
+              [disabled]="isEditing"
+              (change)="onLotChange()">
         <option [ngValue]="null">-- Choisir un lot --</option>
         <option *ngFor="let lot of lots" [ngValue]="lot.id">
           Lot {{ lot.id }} — {{ lot.race_nom }}
@@ -35,12 +34,79 @@
 
     <div class="form-row">
       <label>Date recensement *</label>
-      <input type="date" [(ngModel)]="recensementEnCours.date_recensement">
+      <input type="date"
+             [(ngModel)]="recensementEnCours.date_recensement"
+             (change)="calculerApercu()">
     </div>
 
     <div class="form-row">
       <label>Nombre d'œufs *</label>
-      <input type="number" [(ngModel)]="recensementEnCours.nombre_oeufs" min="1">
+      <input type="number"
+             [(ngModel)]="recensementEnCours.nombre_oeufs"
+             (input)="calculerApercu()"
+             min="1">
+    </div>
+
+    <div class="form-row">
+      <label>% Lamokany (œufs perdus)</label>
+      <div class="input-suffix">
+        <input type="number"
+               [(ngModel)]="recensementEnCours.pourcentage_lamokany"
+               (input)="calculerApercu()"
+               min="0" max="100">
+        <span>%</span>
+      </div>
+    </div>
+
+    <!-- Aperçu incubation automatique -->
+    <div class="apercu-incubation"
+         *ngIf="recensementEnCours.nombre_oeufs &&
+                recensementEnCours.lot_id &&
+                recensementEnCours.date_recensement &&
+                !isEditing">
+
+      <h4>Aperçu incubation automatique</h4>
+
+      <div class="apercu-ligne">
+        <span>Œufs collectés</span>
+        <strong>{{ recensementEnCours.nombre_oeufs }}</strong>
+      </div>
+
+      <div class="apercu-ligne rouge">
+        <span>Lamokany ({{ recensementEnCours.pourcentage_lamokany || 0 }}%)</span>
+        <strong>- {{ nb_lamokany }}</strong>
+      </div>
+
+      <div class="apercu-ligne vert">
+        <span>Œufs valides à incuber</span>
+        <strong>{{ oeufs_valides }}</strong>
+      </div>
+
+      <div class="apercu-ligne">
+        <span>Durée incubation</span>
+        <strong>{{ duree_incubation_race }} jours</strong>
+      </div>
+
+      <div class="apercu-ligne">
+        <span>Date incubation prévue</span>
+        <strong>{{ date_incubation | date:'dd/MM/yyyy' }}</strong>
+      </div>
+
+      <div class="apercu-ligne vert">
+        <span>Poussins attendus</span>
+        <strong>{{ oeufs_valides }}</strong>
+      </div>
+
+      <div class="apercu-ligne" *ngIf="pourcentage_vavy_race > 0">
+        <span>↳ dont Vavy ({{ pourcentage_vavy_race }}%)</span>
+        <strong>{{ nb_vavy_attendus }}</strong>
+      </div>
+
+      <div class="apercu-ligne" *ngIf="pourcentage_lahy_race > 0">
+        <span>↳ dont Lahy ({{ pourcentage_lahy_race }}%)</span>
+        <strong>{{ nb_lahy_attendus }}</strong>
+      </div>
+
     </div>
 
     <div class="form-actions">
@@ -58,16 +124,24 @@
         <th>Lot</th>
         <th>Race</th>
         <th>Date recensement</th>
-        <th>Nombre œufs</th>
+        <th>Nb œufs</th>
+        <th>% Lamokany</th>
+        <th>Nb Lamokany</th>
+        <th>Œufs valides</th>
+        <th>Date incubation</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let r of recensements">
-        <td>{{ r.lot_id }}</td>
+        <td>Lot {{ r.lot_id }}</td>
         <td>{{ r.race_nom }}</td>
         <td>{{ r.date_recensement | date:'dd/MM/yyyy' }}</td>
         <td>{{ r.nombre_oeufs }}</td>
+        <td>{{ r.pourcentage_lamokany }}%</td>
+        <td class="rouge">{{ r.nb_lamokany }}</td>
+        <td class="vert">{{ r.oeufs_valides }}</td>
+        <td>{{ r.date_incubation | date:'dd/MM/yyyy' }}</td>
         <td>
           <button class="btn-edit" (click)="ouvrirModif(r)">Modifier</button>
           <button class="btn-delete" (click)="supprimer(r.id)">Supprimer</button>
@@ -79,6 +153,9 @@
         <td colspan="3"><strong>TOTAL</strong></td>
         <td><strong>{{ totalOeufs }}</strong></td>
         <td></td>
+        <td><strong class="rouge">{{ totalLamokany }}</strong></td>
+        <td><strong class="vert">{{ totalValides }}</strong></td>
+        <td colspan="2"></td>
       </tr>
     </tfoot>
   </table>
