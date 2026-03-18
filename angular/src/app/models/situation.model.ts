@@ -31,6 +31,7 @@ export interface SituationGlobale {
     total_sakafo: number; // vaovao
     total_achat: number; // vaovao]
     total_prix_atody: number;
+    total_vente: number;
 }
 
 export interface CapaciteRace {

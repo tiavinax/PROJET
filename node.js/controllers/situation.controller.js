@@ -110,7 +110,7 @@ function calculerPoidsMoyen(suiviPoids, dateEntreeLot, dateFiltre) {
 
     for (const s of suiviPoids) {
 
-        if (s.semaine > 10) continue;
+        // if (s.semaine > 10) continue;
 
         // Date de cette semaine = dateEntree + semaine*7
         const dateSemaine = new Date(dateEntree + 'T00:00:00');
@@ -205,8 +205,16 @@ exports.getSituation = async (req, res) => {
             const nb_atody = await Situation.getAtody(lot.id, dateFiltre);
             const prix_atody = Number(nb_atody) * Number(prixUnitaireAtody);
 
+            console.log('Nombre atody valide : ' +  nb_atody_valides);
+            console.log('Prix atody valide : ' +  prix_atody_valides);
+            console.log('Achat lot  : ' +  lot.prix_achat_total);
+            console.log('sakafo_lany  : ' +  sakafo_lany);
+
             // 7. Bénéfice
-            const benefice = (prix_vente + prix_atody) - (Number(lot.prix_achat_total) + sakafo_lany);
+            const benefice = (prix_vente + prix_atody_valides) - (Number(lot.prix_achat_total) + sakafo_lany);
+
+            console.log('Benefice  : ' +  benefice);
+
             situationLots.push({
                 lot_id: lot.id,
                 race: lot.race_nom,
@@ -239,6 +247,7 @@ exports.getSituation = async (req, res) => {
             total_lamokany: acc.total_lamokany + lot.nb_lamokany,
             total_prix_lamokany: acc.total_prix_lamokany + lot.prix_lamokany,
             total_prix_atody: acc.total_prix_atody + lot.prix_atody_valides,
+            total_vente: acc.total_vente + lot.prix_vente
         }), {
             total_lamokany: 0,
             total_prix_lamokany: 0,
@@ -251,7 +260,8 @@ exports.getSituation = async (req, res) => {
             somme_poids: 0,
             total_sakafo_lany: 0, // nouveau
             total_achat: 0, // nouveau
-            total_prix_atody: 0
+            total_prix_atody: 0,
+            total_vente: 0
         });
 
         const total_lots_actifs = situationLots.length;
@@ -276,7 +286,8 @@ exports.getSituation = async (req, res) => {
             poids_moyen_global: Math.round(poids_moyen_global * 1000) / 1000,
             total_lamokany: totale.total_lamokany,
             total_prix_lamokany: Math.round(totale.total_prix_lamokany * 100) / 100,
-            total_prix_atody: Math.round(totale.total_prix_atody * 100) / 100
+            total_prix_atody: Math.round(totale.total_prix_atody * 100) / 100,
+            total_vente: totale.total_vente
         };
 
         // Capacite de pondaison par poule

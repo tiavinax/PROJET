@@ -10,6 +10,8 @@ export interface Lot {
     est_actif: number;
     sexe: 'vavy' | 'lahy' | 'mixte';
     pourcentage_sexe: number;
+    nb_vavy_vivantes: number; // 
+    nb_lahy_vivants: number;
 }   
 
 export interface Race {

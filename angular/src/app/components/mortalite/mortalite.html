@@ -35,7 +35,32 @@
 
     <div class="form-row">
       <label>Nombre de morts *</label>
-      <input type="number" [(ngModel)]="mortaliteEnCours.nombre_morts" min="1">
+      <input type="number"
+             [(ngModel)]="mortaliteEnCours.nombre_morts"
+             (input)="calculerApercu()"
+             min="1">
+    </div>
+
+    <div class="form-row">
+      <label>% Vavy mortes</label>
+      <input type="number"
+             [(ngModel)]="mortaliteEnCours.pourcentage_vavy"
+             (input)="onVavyChange()"
+             min="0" max="100">
+    </div>
+
+    <div class="form-row">
+      <label>% Lahy morts</label>
+      <input type="number"
+             [(ngModel)]="mortaliteEnCours.pourcentage_lahy"
+             (input)="onLahyChange()"
+             min="0" max="100">
+    </div>
+
+    <!-- Aperçu calculé -->
+    <div class="info-apercu" *ngIf="mortaliteEnCours.nombre_morts">
+      <span>Vavy mortes : <strong>{{ nb_vavy_morts }}</strong></span>
+      <span>Lahy morts : <strong>{{ nb_lahy_morts }}</strong></span>
     </div>
 
     <div class="form-actions">
@@ -53,15 +78,23 @@
         <th>Race</th>
         <th>Date</th>
         <th>Nb morts</th>
+        <th>% Vavy</th>
+        <th>Vavy mortes</th>
+        <th>% Lahy</th>
+        <th>Lahy morts</th>
         <th>Actions</th>
       </tr>
     </thead>
     <tbody>
       <tr *ngFor="let m of mortalites">
-        <td>{{ m.lot_id }}</td>
+        <td>Lot {{ m.lot_id }}</td>
         <td>{{ m.race_nom }}</td>
         <td>{{ m.date_mortalite | date:'dd/MM/yyyy' }}</td>
         <td class="morts">{{ m.nombre_morts }}</td>
+        <td>{{ m.pourcentage_vavy }}%</td>
+        <td>{{ m.nb_vavy_morts }}</td>
+        <td>{{ m.pourcentage_lahy }}%</td>
+        <td>{{ m.nb_lahy_morts }}</td>
         <td>
           <button class="btn-edit" (click)="ouvrirModif(m)">Modifier</button>
           <button class="btn-delete" (click)="supprimer(m.id)">Supprimer</button>
@@ -72,6 +105,10 @@
       <tr>
         <td colspan="3"><strong>TOTAL</strong></td>
         <td class="morts"><strong>{{ totalMorts }}</strong></td>
+        <td></td>
+        <td><strong>{{ totalVavyMortes }}</strong></td>
+        <td></td>
+        <td><strong>{{ totalLahyMorts }}</strong></td>
         <td></td>
       </tr>
     </tfoot>

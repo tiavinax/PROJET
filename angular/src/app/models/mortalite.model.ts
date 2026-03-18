@@ -3,5 +3,9 @@ export interface Mortalite {
     lot_id: number;
     date_mortalite: string;
     nombre_morts: number;
-    race_nom: string;
+    pourcentage_vavy: number;   // ← nouveau
+    pourcentage_lahy: number;   // ← nouveau
+    nb_vavy_morts: number;      // ← calculé par API
+    nb_lahy_morts: number;      // ← calculé par API
+    race_nom: string;           // ← depuis JOIN
 }

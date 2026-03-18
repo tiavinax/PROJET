@@ -2,26 +2,47 @@ const db = require('../config/db');
 
 class Lot {
     // Récupérer tous les lots
-    // Juste récupérer les lots avec le nom de la race
     static async findAll() {
         const [rows] = await db.query(`
-            SELECT 
-                l.id,
-                l.date_entree,
-                l.nombre_initial,
-                l.nombre_restant,
-                l.age_entree_semaines,
-                l.prix_achat_total,
-                l.est_actif,
-                r.nom  AS race_nom,
-                r.prix_vente_gramme,
-                r.duree_incubation,    
-                r.pourcentage_vavy,  
-                r.pourcentage_lahy     
-            FROM LOT l
-            LEFT JOIN RACE r ON l.race_id = r.id
-            ORDER BY l.date_entree DESC
-        `);
+        SELECT 
+            l.id,
+            l.date_entree,
+            l.nombre_initial,
+            l.nombre_restant,
+            l.race_id,
+            l.age_entree_semaines,
+            l.prix_achat_total,
+            l.est_actif,
+            l.sexe,
+            l.pourcentage_sexe,
+            r.nom               AS race_nom,
+            r.prix_vente_gramme,
+            r.duree_incubation,
+            r.pourcentage_vavy,
+            r.pourcentage_lahy,
+
+            ROUND(
+                (l.nombre_restant * l.pourcentage_sexe / 100)
+                - COALESCE((
+                    SELECT SUM(ROUND(m.nombre_morts * m.pourcentage_vavy / 100))
+                    FROM MORTALITE m
+                    WHERE m.lot_id = l.id
+                ), 0)
+            ) AS nb_vavy_vivantes,
+
+            ROUND(
+                (l.nombre_restant * (100 - l.pourcentage_sexe) / 100)
+                - COALESCE((
+                    SELECT SUM(ROUND(m.nombre_morts * m.pourcentage_lahy / 100))
+                    FROM MORTALITE m
+                    WHERE m.lot_id = l.id
+                ), 0)
+            ) AS nb_lahy_vivants
+
+        FROM LOT l
+        LEFT JOIN RACE r ON l.race_id = r.id
+        ORDER BY l.date_entree DESC
+    `);
         return rows;
     }
 

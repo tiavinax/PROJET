@@ -57,14 +57,51 @@ class Situation {
 
     // Total atody d'un lot jusqu'à la date filtre
     static async getAtody(lotId, dateFiltre) {
-        const [rows] = await db.query(`
-            SELECT COALESCE(SUM(nombre_oeufs), 0) AS total_atody
-            FROM RECENSEMENT_OEUF
-            WHERE lot_id = ?
-            AND date_recensement <= ?
-        `, [lotId, dateFiltre]);
+        // Total recensé avant dateFiltre
+        const [recRows] = await db.query(`
+        SELECT COALESCE(SUM(nombre_oeufs), 0) AS total_recense
+        FROM RECENSEMENT_OEUF
+        WHERE lot_id = ?
+        AND date_recensement <= ?
+        AND nombre_oeufs > 0
+    `, [lotId, dateFiltre]);
 
-        return rows[0].total_atody;
+        const total_recense = Number(recRows[0].total_recense);
+
+        // Transformés + lamokany — seulement si transformation faite avant dateFiltre
+        const [transfoRows] = await db.query(`
+        SELECT 
+            COALESCE(SUM(nombre_oeufs), 0)  AS total_oeufs_transfo,
+            COALESCE(SUM(nb_lamokany), 0)   AS total_lamokany
+        FROM TRANSFORMATION_OEUF
+        WHERE lot_source_id = ?
+        AND date_transformation <= ?
+    `, [lotId, dateFiltre]);
+
+        const total_oeufs_transfo = Number(transfoRows[0].total_oeufs_transfo);
+        // const total_lamokany = Number(transfoRows[0].total_lamokany);
+
+        // Atody vendables = recensé - transformés - lamokany
+        return Math.max(0, total_recense - total_oeufs_transfo);
+        // Note : total_oeufs_transfo inclut déjà les lamokany
+        // car nombre_oeufs = total recensé (27000+3000=30000)
+    }
+
+    static async getLamokany(lotId, dateFiltre) {
+        // Lamokany = connus seulement après transformation
+        const [rows] = await db.query(`
+        SELECT COALESCE(SUM(nb_lamokany), 0) AS total_lamokany
+        FROM TRANSFORMATION_OEUF
+        WHERE lot_source_id = ?
+        AND date_transformation <= ?
+    `, [lotId, dateFiltre]);
+
+        return rows[0].total_lamokany;
+    }
+
+    // Atody valides d'un lot (sans les lamokany)
+    static async getAtodyValides(lotId, dateFiltre) {
+        return await Situation.getAtody(lotId, dateFiltre);
     }
 
     // Prix atody selon la race
@@ -80,22 +117,6 @@ class Situation {
         return rows.length > 0 ? rows[0].prix_unitaire : 0;
     }
 
-
-    // Ajouter ces méthodes dans la classe Situation
-
-    // Atody lamokany d'un lot jusqu'à la date filtre
-    static async getLamokany(lotId, dateFiltre) {
-        const [rows] = await db.query(`
-        SELECT 
-            COALESCE(SUM(ROUND(nombre_oeufs * pourcentage_lamokany / 100)), 0) AS total_lamokany
-        FROM RECENSEMENT_OEUF
-        WHERE lot_id = ?
-        AND date_recensement <= ?
-        AND nombre_oeufs > 0
-    `, [lotId, dateFiltre]);
-        return rows[0].total_lamokany;
-    }
-
     // Capacité pondaison de chaque race à la date filtre
     static async getCapaciteRaces(dateFiltre) {
         const [rows] = await db.query(`
@@ -107,7 +128,6 @@ class Situation {
             r.pourcentage_lahy,
             r.duree_incubation,
 
-            -- Total oeufs collectés jusqu'à dateFiltre
             COALESCE((
                 SELECT SUM(ro.nombre_oeufs)
                 FROM RECENSEMENT_OEUF ro
@@ -117,7 +137,6 @@ class Situation {
                 AND ro.date_recensement <= ?
             ), 0) AS total_oeufs_collectes,
 
-            -- Vavy ajoutées par incubation jusqu'à dateFiltre
             COALESCE((
                 SELECT SUM(ROUND(t.nombre_poussins_obtenus * r2.pourcentage_vavy / 100))
                 FROM TRANSFORMATION_OEUF t
@@ -127,17 +146,23 @@ class Situation {
                 AND t.date_transformation <= ?
             ), 0) AS total_vavy_ajoutees,
 
-            -- Total vavy vivantes (tous lots confondus)
             COALESCE((
                 SELECT SUM(
                     ROUND(
-                        (l.nombre_initial - COALESCE((
-                            SELECT SUM(m.nombre_morts)
-                            FROM MORTALITE m
-                            WHERE m.lot_id = l.id
-                            AND m.date_mortalite <= ?
-                        ), 0))
-                        * l.pourcentage_sexe / 100
+                        (l.nombre_initial
+                            - COALESCE((
+                                SELECT SUM(m.nombre_morts)
+                                FROM MORTALITE m
+                                WHERE m.lot_id = l.id
+                                AND m.date_mortalite <= ?
+                            ), 0)
+                        ) * l.pourcentage_sexe / 100
+                        - COALESCE((
+                            SELECT SUM(ROUND(m2.nombre_morts * m2.pourcentage_vavy / 100))
+                            FROM MORTALITE m2
+                            WHERE m2.lot_id = l.id
+                            AND m2.date_mortalite <= ?
+                        ), 0)
                     )
                 )
                 FROM LOT l
@@ -149,20 +174,21 @@ class Situation {
 
         FROM RACE r
         ORDER BY r.nom ASC
-    `, [dateFiltre, dateFiltre, dateFiltre, dateFiltre]);
+    `, [
+            dateFiltre,   // 1 — total_oeufs_collectes
+            dateFiltre,   // 2 — total_vavy_ajoutees
+            dateFiltre,   // 3 — mortalite dans nb_vavy
+            dateFiltre,   // 4 — vavy_mortes dans nb_vavy
+            dateFiltre    // 5 — date_entree <= ? ← manquait !
+        ]);
 
         return rows.map(race => {
             const capacite_initiale = Number(race.capacite_initiale);
             const total_oeufs_collectes = Number(race.total_oeufs_collectes);
             const nb_vavy = Number(race.nb_vavy_vivantes);
 
-            // Capacite max globale = nb_vavy × capacite_par_poule
             const capacite_max_globale = nb_vavy * capacite_initiale;
-
-            // Capacite restante globale
             const capacite_restante_globale = capacite_max_globale - total_oeufs_collectes;
-
-            // Capacite restante par poule = capacite_restante_globale / nb_vavy
             const capacite_restante_par_poule = nb_vavy > 0
                 ? Math.round((capacite_restante_globale / nb_vavy) * 100) / 100
                 : 0;
@@ -173,7 +199,7 @@ class Situation {
                 capacite_max_globale: Math.round(capacite_max_globale),
                 total_oeufs_collectes,
                 capacite_restante_globale: Math.round(capacite_restante_globale),
-                capacite_restante: capacite_restante_par_poule  // ← par poule
+                capacite_restante: capacite_restante_par_poule
             };
         });
     }
@@ -240,19 +266,6 @@ class Situation {
                     : 0
             };
         });
-    }
-
-    // Atody valides d'un lot (sans les lamokany)
-    static async getAtodyValides(lotId, dateFiltre) {
-        const [rows] = await db.query(`
-        SELECT 
-            COALESCE(SUM(nombre_oeufs - ROUND(nombre_oeufs * pourcentage_lamokany / 100)), 0) AS total_valides
-        FROM RECENSEMENT_OEUF
-        WHERE lot_id = ?
-        AND date_recensement <= ?
-        AND nombre_oeufs > 0
-    `, [lotId, dateFiltre]);
-        return rows[0].total_valides;
     }
 
 }

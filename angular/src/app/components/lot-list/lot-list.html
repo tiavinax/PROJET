@@ -17,6 +17,8 @@
         <th>Date entrée</th>
         <th>Race</th>
         <th>Nombre initial</th>
+        <th>Vavy vivantes</th>
+        <th>Lahy vivants</th>
         <th>Restant</th>
         <th>Âge (semaines)</th>
         <th>Prix achat</th>
@@ -31,6 +33,8 @@
         <td>{{ lot.date_entree | date:'dd/MM/yyyy' }}</td>
         <td>{{ lot.race_nom }}</td>
         <td>{{ lot.nombre_initial }}</td>
+        <td>{{ lot.nb_vavy_vivantes | number }}</td>
+        <td>{{ lot.nb_lahy_vivants | number }}</td>
         <td>{{ lot.nombre_restant }}</td>
         <td>{{ lot.age_entree_semaines }}</td>
         <td>{{ lot.prix_achat_total | number:'1.0-0' }} Ar</td>

@@ -1,5 +1,5 @@
 const RecensementOeuf = require('../models/recensement_oeuf.model');
-const Race            = require('../models/race.model');
+const Race = require('../models/race.model');
 const TransformationOeuf = require('../models/transformation_oeuf.model');
 
 exports.getAll = async (req, res) => {
@@ -51,9 +51,11 @@ exports.create = async (req, res) => {
         const race = lotRows[0];
 
         // Calculs
-        const pctLamokany   = pourcentage_lamokany || 0;
-        const nb_lamokany   = Math.round(nombre_oeufs * pctLamokany / 100);
+        const pctLamokany = pourcentage_lamokany || 0;
+        const nb_lamokany = Math.round(nombre_oeufs * pctLamokany / 100);
         const oeufs_valides = nombre_oeufs - nb_lamokany;
+        const nb_lamokany_transfo = Math.round(nombre_oeufs * pctLamokany / 100);
+        const oeufs_a_incuber = nombre_oeufs - nb_lamokany_transfo;
 
         // 1. Créer le recensement
         const recId = await RecensementOeuf.create({
@@ -75,16 +77,17 @@ exports.create = async (req, res) => {
             const nb_lahy = Math.round(oeufs_valides * race.pourcentage_lahy / 100);
 
             // Créer le nouveau lot destination
+            // Créer le nouveau lot avec oeufs_a_incuber
             const [resultLot] = await connection.query(`
                 INSERT INTO LOT
                     (date_entree, nombre_initial, nombre_restant, race_id,
-                     age_entree_semaines, prix_achat_total, est_actif,
-                     sexe, pourcentage_sexe)
+                    age_entree_semaines, prix_achat_total, est_actif,
+                    sexe, pourcentage_sexe)
                 VALUES (?, ?, ?, ?, 0, 0, 1, 'mixte', ?)
             `, [
                 date_incubation_str,
-                oeufs_valides,
-                oeufs_valides,
+                oeufs_a_incuber,     // ← seulement les valides
+                oeufs_a_incuber,
                 race.race_id,
                 race.pourcentage_vavy
             ]);
@@ -95,20 +98,23 @@ exports.create = async (req, res) => {
             await connection.query(`
                 INSERT INTO TRANSFORMATION_OEUF
                     (lot_source_id, recensement_source_id, date_transformation,
-                     nombre_oeufs, nombre_poussins_obtenus, nombre_perte, lot_destination_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                    nombre_oeufs, nombre_poussins_obtenus, nombre_perte,
+                    nb_lamokany, lot_destination_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             `, [
                 lot_id,
                 recId,
                 date_incubation_str,
-                oeufs_valides,
-                oeufs_valides,
-                0,
+                nombre_oeufs,           // total recensé
+                oeufs_a_incuber,        // poussins = valides
+                0,                      // nombre_perte = 0 (éclos parfaitement)
+                nb_lamokany_transfo,    // ← lamokany stocké ici !
                 lot_destination_id
             ]);
 
             // Ajouter capacité pondaison — nouvelles vavy
-            await Race.ajouterCapacite(race.race_id, nb_vavy, connection);
+
+            // await Race.ajouterCapacite(race.race_id, nb_vavy, connection);
 
             nouveauLot = { lot_destination_id, date_incubation_str, nb_vavy, nb_lahy };
         }
